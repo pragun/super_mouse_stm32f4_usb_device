@@ -25,7 +25,6 @@
 #include "circular_buffer.hpp"
 #include "usbd_cdc_if.h"
 
-
 /* Private includes ----------------------------------------------------------*/
 /* USER CODE BEGIN Includes */
 
@@ -67,14 +66,20 @@ int usb_event_num = 0;
 int mouse_event_num = 0;
 int keyboard_event_num = 0;
 
-#define RX_BUF_SIZE 128
-#define UART_TX_BUF_SIZE 512
+#define UART_RX_BUF_SIZE 128
+#define USB_CDC_TX_BUF_SIZE 512
+#define SPI_RX_BUF_SIZE 17
 
 int tx_count = 0;
 char* tx_buf = 0;
+int spi_rx_count = 0;
+int spi_error_count = 0;
+int spi_half_rx_count = 0;
+const uint16_t keep_alive_period = 10'000;
 
-uint8_t rx_buf[RX_BUF_SIZE];
-CircularBuffer<UART_TX_BUF_SIZE> uart_tx_buffer;
+uint8_t rx_buf[UART_RX_BUF_SIZE];
+uint8_t spi_rx_buf[] = "Test Test Test Test Test ";
+CircularBuffer<USB_CDC_TX_BUF_SIZE> uart_tx_buffer;
 
 /* USER CODE END PV */
 
@@ -93,8 +98,41 @@ static void MX_USART2_UART_Init(void);
 
 /* Private user code ---------------------------------------------------------*/
 /* USER CODE BEGIN 0 */
+//extern "C" uint8_t PrintHexBuf(uint8_t *buff, uint8_t len);
+uint8_t PrintHexBuf(uint8_t *buff, uint8_t len){
+	for(uint8_t i = 0; i<len; i++){
+		printf("%02X ",buff[i]);
+		if ((i+1)%8 == 0){
+			printf("\r\n");
+		}
+	}
+	printf("\r\n");
+	return 0;
+}
+
+
+void spi_rx_complete(SPI_HandleTypeDef *hspi){
+	spi_rx_count ++ ;
+	printf("SPI RX Complete: %d\r\n Received:\r\n",spi_rx_count);
+	PrintHexBuf(spi_rx_buf,24);
+	spi_rx_buf[SPI_RX_BUF_SIZE] = 0;
+	printf("Rcv:{%s}\r\n",spi_rx_buf);
+}
+
+void spi_half_rx_complete(SPI_HandleTypeDef *hspi){
+	spi_half_rx_count ++ ;
+	printf("SPI Half Received: %d\r\n",spi_rx_count);
+}
+
+void spi_rx_error(SPI_HandleTypeDef *hspi){
+	spi_error_count ++ ;
+	printf("SPI Error: %d\r\n",spi_error_count);
+}
+
 void timer11_period_elapsed(TIM_HandleTypeDef *htim){
 	tim11_count ++;
+	HAL_SPI_Receive_DMA(&hspi1, spi_rx_buf, SPI_RX_BUF_SIZE);
+	//HAL_SPI_Receive_IT(&hspi1, spi_rx_buf, SPI_RX_BUF_SIZE);
 	printf("Client keeping alive.. %d\r\n",tim11_count);
 	//CDC_Transmit_FS((uint8_t *) "Hello world \r\n",14);
 }
@@ -108,7 +146,7 @@ void timer10_period_elapsed(TIM_HandleTypeDef *htim){
 	}
 
 	if (huart2.RxState == HAL_UART_STATE_READY){
-		HAL_UART_Receive_IT(&huart2, rx_buf, RX_BUF_SIZE);
+		HAL_UART_Receive_IT(&huart2, rx_buf, UART_RX_BUF_SIZE);
 	}
 
 	if(CDC_Transmit_Done() == 0){
@@ -122,8 +160,8 @@ void timer10_period_elapsed(TIM_HandleTypeDef *htim){
 }
 
 void uart_rx_complete(UART_HandleTypeDef *huart){
-	uart_tx_buffer.write_to_queue((char *) rx_buf,RX_BUF_SIZE);
-	HAL_UART_Receive_IT(&huart2, rx_buf, RX_BUF_SIZE);
+	uart_tx_buffer.write_to_queue((char *) rx_buf, UART_RX_BUF_SIZE);
+	HAL_UART_Receive_IT(&huart2, rx_buf, UART_RX_BUF_SIZE);
 	uart_rx_count ++;
 }
 
@@ -134,17 +172,6 @@ int _write(int file, char *ptr, int len)
 	return len;
 }
 
-//extern "C" uint8_t PrintHexBuf(uint8_t *buff, uint8_t len);
-uint8_t PrintHexBuf(uint8_t *buff, uint8_t len){
-	for(uint8_t i = 0; i<len; i++){
-		printf("%02X ",buff[i]);
-		if ((i+1)%8 == 0){
-			printf("\r\n");
-		}
-	}
-	printf("\r\n");
-	return 0;
-}
 
 /* USER CODE END 0 */
 
@@ -191,6 +218,10 @@ int main(void)
   HAL_TIM_RegisterCallback(&htim10,HAL_TIM_PERIOD_ELAPSED_CB_ID, timer10_period_elapsed);
 //  HAL_UART_RegisterCallback(&huart2, HAL_UART_TX_COMPLETE_CB_ID, uart_transfer_completed);
   HAL_UART_RegisterCallback(&huart2, HAL_UART_RX_COMPLETE_CB_ID, uart_rx_complete);
+  HAL_SPI_RegisterCallback(&hspi1, HAL_SPI_RX_COMPLETE_CB_ID, spi_rx_complete);
+  HAL_SPI_RegisterCallback(&hspi1, HAL_SPI_RX_HALF_COMPLETE_CB_ID, spi_half_rx_complete);
+  HAL_SPI_RegisterCallback(&hspi1, HAL_SPI_ERROR_CB_ID, spi_rx_error);
+
   HAL_TIM_Base_Start_IT(&htim11);
   HAL_TIM_Base_Start_IT(&htim10);
 
@@ -370,7 +401,7 @@ static void MX_TIM11_Init(void)
   htim11.Instance = TIM11;
   htim11.Init.Prescaler = 8400;
   htim11.Init.CounterMode = TIM_COUNTERMODE_UP;
-  htim11.Init.Period = 50000;
+  htim11.Init.Period = keep_alive_period;
   htim11.Init.ClockDivision = TIM_CLOCKDIVISION_DIV1;
   htim11.Init.AutoReloadPreload = TIM_AUTORELOAD_PRELOAD_ENABLE;
   if (HAL_TIM_Base_Init(&htim11) != HAL_OK)
