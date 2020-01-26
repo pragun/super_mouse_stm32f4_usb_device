@@ -114,6 +114,7 @@ uint8_t PrintHexBuf(uint8_t *buff, uint8_t len){
 void HAL_GPIO_EXTI_Callback(uint16_t GPIO_Pin)
 {
 	gpio_pa8_interrupt_count ++ ;
+	HAL_SPI_Receive_DMA(&hspi1, spi_rx_buf, SPI_RX_BUF_SIZE);
 	printf("GPIO Interrupt received.\r\n");
 }
 
@@ -138,7 +139,7 @@ void spi_rx_error(SPI_HandleTypeDef *hspi){
 
 void timer11_period_elapsed(TIM_HandleTypeDef *htim){
 	tim11_count ++;
-	HAL_SPI_Receive_DMA(&hspi1, spi_rx_buf, SPI_RX_BUF_SIZE);
+	//HAL_SPI_Receive_DMA(&hspi1, spi_rx_buf, SPI_RX_BUF_SIZE);
 	//HAL_SPI_Receive_IT(&hspi1, spi_rx_buf, SPI_RX_BUF_SIZE);
 	printf("Client keeping alive.. %d\r\n",tim11_count);
 	//CDC_Transmit_FS((uint8_t *) "Hello world \r\n",14);
