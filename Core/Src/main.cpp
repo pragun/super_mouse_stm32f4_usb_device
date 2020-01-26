@@ -65,6 +65,7 @@ int uart_rx_count = 0;
 int usb_event_num = 0;
 int mouse_event_num = 0;
 int keyboard_event_num = 0;
+int gpio_pa8_interrupt_count = 0;
 
 #define UART_RX_BUF_SIZE 128
 #define USB_CDC_TX_BUF_SIZE 512
@@ -108,6 +109,12 @@ uint8_t PrintHexBuf(uint8_t *buff, uint8_t len){
 	}
 	printf("\r\n");
 	return 0;
+}
+
+void HAL_GPIO_EXTI_Callback(uint16_t GPIO_Pin)
+{
+	gpio_pa8_interrupt_count ++ ;
+	printf("GPIO Interrupt received.\r\n");
 }
 
 
@@ -487,9 +494,13 @@ static void MX_GPIO_Init(void)
 
   /*Configure GPIO pin : PA8 */
   GPIO_InitStruct.Pin = GPIO_PIN_8;
-  GPIO_InitStruct.Mode = GPIO_MODE_INPUT;
+  GPIO_InitStruct.Mode = GPIO_MODE_IT_RISING;
   GPIO_InitStruct.Pull = GPIO_NOPULL;
   HAL_GPIO_Init(GPIOA, &GPIO_InitStruct);
+
+  /* EXTI interrupt init*/
+  HAL_NVIC_SetPriority(EXTI9_5_IRQn, 0, 0);
+  HAL_NVIC_EnableIRQ(EXTI9_5_IRQn);
 
 }
 
