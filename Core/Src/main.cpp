@@ -67,20 +67,23 @@ int mouse_event_num = 0;
 int keyboard_event_num = 0;
 int gpio_pa8_interrupt_count = 0;
 
-#define UART_RX_BUF_SIZE 128
+#define UART_RX_BUF_SIZE 16
 #define USB_CDC_TX_BUF_SIZE 512
 #define SPI_RX_BUF_SIZE 17
+
+#define DMA_UART 1
+#define USING_CIRCULAR_DMA 1
 
 int tx_count = 0;
 char* tx_buf = 0;
 int spi_rx_count = 0;
 int spi_error_count = 0;
 int spi_half_rx_count = 0;
-const uint16_t keep_alive_period = 10'000;
+const uint16_t keep_alive_period = 50'000;
 
 uint8_t rx_buf[UART_RX_BUF_SIZE];
 uint8_t spi_rx_buf[] = "Test Test Test Test Test ";
-CircularBuffer<USB_CDC_TX_BUF_SIZE> uart_tx_buffer;
+CircularBuffer<USB_CDC_TX_BUF_SIZE> uart2_tx_buf;
 
 /* USER CODE END PV */
 
@@ -141,26 +144,32 @@ void timer11_period_elapsed(TIM_HandleTypeDef *htim){
 	tim11_count ++;
 	//HAL_SPI_Receive_DMA(&hspi1, spi_rx_buf, SPI_RX_BUF_SIZE);
 	//HAL_SPI_Receive_IT(&hspi1, spi_rx_buf, SPI_RX_BUF_SIZE);
-	printf("Client keeping alive.. %d\r\n",tim11_count);
+	printf("Client alive msg.. %d\r\n",tim11_count);
 	//CDC_Transmit_FS((uint8_t *) "Hello world \r\n",14);
 }
+
+
 
 void timer10_period_elapsed(TIM_HandleTypeDef *htim){
 	tim10_count ++;
 
+#ifndef DMA_UART
 	if (huart2.RxState == HAL_UART_STATE_BUSY_RX){ //Checking against the second bit of rxState
 		HAL_UART_AbortReceive(&huart2,0);
-		uart_tx_buffer.write_to_queue((char*) rx_buf,(huart2.RxXferSize - huart2.RxXferCount));
+		if((huart2.RxXferSize - huart2.RxXferCount) > 0){
+			uart2_tx_buf.write_to_queue((char*) rx_buf, (huart2.RxXferSize - huart2.RxXferCount));
+		}
 	}
 
 	if (huart2.RxState == HAL_UART_STATE_READY){
 		HAL_UART_Receive_IT(&huart2, rx_buf, UART_RX_BUF_SIZE);
 	}
+#endif
 
 	if(CDC_Transmit_Done() == 0){
-		uart_tx_buffer.send_complete();
-		if ((uart_tx_buffer.length_of_ongoing_transmission() == 0) && (uart_tx_buffer.length_of_queue() > 0)){
-				std::tie (tx_buf, tx_count) = uart_tx_buffer.longest_possible_send();
+		uart2_tx_buf.send_complete();
+		if ((uart2_tx_buf.length_of_ongoing_transmission() == 0) && (uart2_tx_buf.length_of_queue() > 0)){
+				std::tie (tx_buf, tx_count) = uart2_tx_buf.longest_possible_send();
 				//HAL_UART_Transmit_DMA(&huart2,(uint8_t*) tx_buf, tx_count);
 				CDC_Transmit_FS((uint8_t*) tx_buf, tx_count);
 		}
@@ -168,15 +177,23 @@ void timer10_period_elapsed(TIM_HandleTypeDef *htim){
 }
 
 void uart_rx_complete(UART_HandleTypeDef *huart){
-	uart_tx_buffer.write_to_queue((char *) rx_buf, UART_RX_BUF_SIZE);
+	uart2_tx_buf.write_to_queue((char *) rx_buf, UART_RX_BUF_SIZE);
+
+#ifdef DMA_UART
+#ifndef USING_CIRCULAR_DMA
+	HAL_UART_Receive_DMA(&huart2, rx_buf, UART_RX_BUF_SIZE);
+#endif
+#elif
 	HAL_UART_Receive_IT(&huart2, rx_buf, UART_RX_BUF_SIZE);
+#endif
+
 	uart_rx_count ++;
 }
 
 extern "C" int _write(int file, char *ptr, int len);
 int _write(int file, char *ptr, int len)
 {
-	uart_tx_buffer.write_to_queue(ptr, len);
+	uart2_tx_buf.write_to_queue(ptr, len);
 	return len;
 }
 
@@ -227,13 +244,19 @@ int main(void)
 //  HAL_UART_RegisterCallback(&huart2, HAL_UART_TX_COMPLETE_CB_ID, uart_transfer_completed);
   HAL_UART_RegisterCallback(&huart2, HAL_UART_RX_COMPLETE_CB_ID, uart_rx_complete);
   HAL_SPI_RegisterCallback(&hspi1, HAL_SPI_RX_COMPLETE_CB_ID, spi_rx_complete);
-  HAL_SPI_RegisterCallback(&hspi1, HAL_SPI_RX_HALF_COMPLETE_CB_ID, spi_half_rx_complete);
+  //HAL_SPI_RegisterCallback(&hspi1, HAL_SPI_RX_HALF_COMPLETE_CB_ID, spi_half_rx_complete);
   HAL_SPI_RegisterCallback(&hspi1, HAL_SPI_ERROR_CB_ID, spi_rx_error);
 
   HAL_TIM_Base_Start_IT(&htim11);
   HAL_TIM_Base_Start_IT(&htim10);
 
   /* USER CODE END 2 */
+#ifdef DMA_UART
+	HAL_UART_Receive_DMA(&huart2, rx_buf, UART_RX_BUF_SIZE);
+#elif
+	HAL_UART_Receive_IT(&huart2, rx_buf, UART_RX_BUF_SIZE);
+#endif
+
 
   /* Infinite loop */
   /* USER CODE BEGIN WHILE */
@@ -437,7 +460,7 @@ static void MX_USART2_UART_Init(void)
 
   /* USER CODE END USART2_Init 1 */
   huart2.Instance = USART2;
-  huart2.Init.BaudRate = 115200;
+  huart2.Init.BaudRate = 1000000;
   huart2.Init.WordLength = UART_WORDLENGTH_8B;
   huart2.Init.StopBits = UART_STOPBITS_1;
   huart2.Init.Parity = UART_PARITY_NONE;
