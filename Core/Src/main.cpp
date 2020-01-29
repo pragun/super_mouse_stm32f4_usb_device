@@ -74,12 +74,6 @@ int gpio_pa8_interrupt_count = 0;
 #define USING_DMA_UART 1
 #define USING_CIRCULAR_DMA 1
 
-
-
-int tx_count = 0;
-char* tx_buf = 0;
-
-
 int spi_rx_count = 0;
 int spi_error_count = 0;
 int spi_half_rx_count = 0;
@@ -189,7 +183,8 @@ void timer10_period_elapsed(TIM_HandleTypeDef *htim){
 	if(CDC_Transmit_Done() == 0){
 		uart2_tx_buf.send_complete();
 		if ((uart2_tx_buf.length_of_ongoing_transmission() == 0) && (uart2_tx_buf.length_of_queue() > 0)){
-				std::tie (tx_buf, tx_count) = uart2_tx_buf.longest_possible_send();
+				//std::tie (char* tx_buf, uint8_t tx_count) = uart2_tx_buf.longest_possible_send();
+				auto [ tx_buf, tx_count ] = uart2_tx_buf.longest_possible_send();
 				//HAL_UART_Transmit_DMA(&huart2,(uint8_t*) tx_buf, tx_count);
 				CDC_Transmit_FS((uint8_t*) tx_buf, tx_count);
 		}
