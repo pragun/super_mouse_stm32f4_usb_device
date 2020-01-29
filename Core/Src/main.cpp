@@ -67,21 +67,28 @@ int mouse_event_num = 0;
 int keyboard_event_num = 0;
 int gpio_pa8_interrupt_count = 0;
 
-#define UART_RX_BUF_SIZE 16
+#define UART_RX_BUF_SIZE 128
 #define USB_CDC_TX_BUF_SIZE 512
 #define SPI_RX_BUF_SIZE 17
 
-#define DMA_UART 1
+#define USING_DMA_UART 1
 #define USING_CIRCULAR_DMA 1
+
+
 
 int tx_count = 0;
 char* tx_buf = 0;
+
+
 int spi_rx_count = 0;
 int spi_error_count = 0;
 int spi_half_rx_count = 0;
 const uint16_t keep_alive_period = 50'000;
+uint32_t uart_rx_dma_remaining_bytes = 0;
 
+uint8_t rx_buf_read_pos = 0;
 uint8_t rx_buf[UART_RX_BUF_SIZE];
+
 uint8_t spi_rx_buf[] = "Test Test Test Test Test ";
 CircularBuffer<USB_CDC_TX_BUF_SIZE> uart2_tx_buf;
 
@@ -117,7 +124,7 @@ uint8_t PrintHexBuf(uint8_t *buff, uint8_t len){
 void HAL_GPIO_EXTI_Callback(uint16_t GPIO_Pin)
 {
 	gpio_pa8_interrupt_count ++ ;
-	HAL_SPI_Receive_DMA(&hspi1, spi_rx_buf, SPI_RX_BUF_SIZE);
+	HAL_SPI_Receive_DMA(&hspi1, spi_rx_buf, 9);
 	printf("GPIO Interrupt received.\r\n");
 }
 
@@ -125,7 +132,7 @@ void HAL_GPIO_EXTI_Callback(uint16_t GPIO_Pin)
 void spi_rx_complete(SPI_HandleTypeDef *hspi){
 	spi_rx_count ++ ;
 	printf("SPI RX Complete: %d\r\n Received:\r\n",spi_rx_count);
-	PrintHexBuf(spi_rx_buf,24);
+	PrintHexBuf(spi_rx_buf,9);
 	spi_rx_buf[SPI_RX_BUF_SIZE] = 0;
 	printf("Rcv:{%s}\r\n",spi_rx_buf);
 }
@@ -148,12 +155,25 @@ void timer11_period_elapsed(TIM_HandleTypeDef *htim){
 	//CDC_Transmit_FS((uint8_t *) "Hello world \r\n",14);
 }
 
-
+void process_transfer_uart_rx_buf(uint8_t remaining_bytes){
+	if ((UART_RX_BUF_SIZE - remaining_bytes)> 0){
+		uint8_t bytes_to_transfer = UART_RX_BUF_SIZE - remaining_bytes - rx_buf_read_pos;
+		uart2_tx_buf.write_to_queue((char *) &rx_buf[rx_buf_read_pos], bytes_to_transfer);
+		rx_buf_read_pos += bytes_to_transfer;
+	}
+	if(remaining_bytes == 0){
+		rx_buf_read_pos = 0;
+	}
+}
 
 void timer10_period_elapsed(TIM_HandleTypeDef *htim){
 	tim10_count ++;
 
-#ifndef DMA_UART
+#ifdef USING_DMA_UART
+	uart_rx_dma_remaining_bytes = __HAL_DMA_GET_COUNTER(&hdma_usart2_rx);
+	process_transfer_uart_rx_buf(uart_rx_dma_remaining_bytes);
+
+#else
 	if (huart2.RxState == HAL_UART_STATE_BUSY_RX){ //Checking against the second bit of rxState
 		HAL_UART_AbortReceive(&huart2,0);
 		if((huart2.RxXferSize - huart2.RxXferCount) > 0){
@@ -176,14 +196,15 @@ void timer10_period_elapsed(TIM_HandleTypeDef *htim){
 	}
 }
 
-void uart_rx_complete(UART_HandleTypeDef *huart){
-	uart2_tx_buf.write_to_queue((char *) rx_buf, UART_RX_BUF_SIZE);
 
-#ifdef DMA_UART
-#ifndef USING_CIRCULAR_DMA
+void uart_rx_complete(UART_HandleTypeDef *huart){
+	process_transfer_uart_rx_buf(0);
+
+#ifdef USING_DMA_UART
+	#ifndef USING_CIRCULAR_DMA
 	HAL_UART_Receive_DMA(&huart2, rx_buf, UART_RX_BUF_SIZE);
-#endif
-#elif
+	#endif
+#else
 	HAL_UART_Receive_IT(&huart2, rx_buf, UART_RX_BUF_SIZE);
 #endif
 
@@ -251,9 +272,9 @@ int main(void)
   HAL_TIM_Base_Start_IT(&htim10);
 
   /* USER CODE END 2 */
-#ifdef DMA_UART
+#ifdef USING_DMA_UART
 	HAL_UART_Receive_DMA(&huart2, rx_buf, UART_RX_BUF_SIZE);
-#elif
+#else
 	HAL_UART_Receive_IT(&huart2, rx_buf, UART_RX_BUF_SIZE);
 #endif
 
