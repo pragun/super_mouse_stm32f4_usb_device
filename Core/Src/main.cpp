@@ -124,7 +124,7 @@ uint8_t PrintHexBuf(uint8_t *buff, uint8_t len){
 void HAL_GPIO_EXTI_Callback(uint16_t GPIO_Pin)
 {
 	gpio_pa8_interrupt_count ++ ;
-	HAL_SPI_Receive_DMA(&hspi1, spi_rx_buf, 9);
+	//HAL_SPI_Receive_DMA(&hspi1, spi_rx_buf, 9);
 	printf("GPIO Interrupt received.\r\n");
 }
 
@@ -277,7 +277,7 @@ int main(void)
 #else
 	HAL_UART_Receive_IT(&huart2, rx_buf, UART_RX_BUF_SIZE);
 #endif
-
+	HAL_SPI_Receive_DMA(&hspi1, spi_rx_buf, 9);
 
   /* Infinite loop */
   /* USER CODE BEGIN WHILE */
