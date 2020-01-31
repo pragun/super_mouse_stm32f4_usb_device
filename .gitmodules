@@ -1,0 +1,9 @@
+[submodule "Integrated_Circuits_USBDevice"]
+	path = Integrated_Circuits_USBDevice
+	url = https://github.com/IntergatedCircuits/USBDevice4Cube
+[submodule "USBDevice4Cube"]
+	path = USBDevice4Cube
+	url = https://github.com/IntergatedCircuits/USBDevice4Cube
+[submodule "USBDevice"]
+	path = USBDevice
+	url = https://github.com/IntergatedCircuits/USBDevice

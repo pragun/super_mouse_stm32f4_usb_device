@@ -6969,6 +6969,12 @@ typedef struct
 #define USB_OTG_GOTGCTL_BSVLD_Msk                (0x1UL << USB_OTG_GOTGCTL_BSVLD_Pos) /*!< 0x00080000 */
 #define USB_OTG_GOTGCTL_BSVLD                    USB_OTG_GOTGCTL_BSVLD_Msk     /*!< B-session valid */
 
+//Added these three values to satisfy USBDevice from integrated_circuits library XPD Business
+#define USB_OTG_GOTGCTL_BVALOEN         		 (0x00000040)         //; B-peripheral session valid override enable
+#define USB_OTG_GOTGCTL_BVALOVAL        		 (0x00000080)         //; B-peripheral session valid override value
+#define USB_OTG_GOTGCTL_BSESVLD         		 (0x00080000)         //;  B-session valid
+
+
 /********************  Bit definition forUSB_OTG_HCFG register  ********************/
 
 #define USB_OTG_HCFG_FSLSPCS_Pos                 (0U)                          
