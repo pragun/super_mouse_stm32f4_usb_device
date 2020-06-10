@@ -166,10 +166,8 @@ void timer10_period_elapsed(TIM_HandleTypeDef *htim){
 	process_transfer_uart_rx_buf(uart_rx_dma_remaining_bytes);
 
 	if ((uart2_tx_buf.length_of_ongoing_transmission() == 0) && (uart2_tx_buf.length_of_queue() > 0)){
-			//std::tie (char* tx_buf, uint8_t tx_count) = uart2_tx_buf.longest_possible_send();
 			auto [ tx_buf, tx_count ] = uart2_tx_buf.longest_possible_send();
 			HAL_UART_Transmit_DMA(&huart2,(uint8_t*) tx_buf, tx_count);
-			//CDC_Transmit_FS((uint8_t*) tx_buf, tx_count);
 	}
 }
 
