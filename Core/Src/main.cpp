@@ -23,7 +23,6 @@
 #include "usb_device.h"
 #include <cstdio>
 #include "circular_buffer.hpp"
-//#include "usbd_cdc_if.h"
 
 /* Private includes ----------------------------------------------------------*/
 /* USER CODE BEGIN Includes */
@@ -122,7 +121,6 @@ void HAL_GPIO_EXTI_Callback(uint16_t GPIO_Pin)
 	printf("GPIO Interrupt received.\r\n");
 }
 
-
 void spi_rx_complete(SPI_HandleTypeDef *hspi){
 	spi_rx_count ++ ;
 	printf("SPI RX Complete: %d\r\n Received:\r\n",spi_rx_count);
@@ -143,9 +141,10 @@ void spi_rx_error(SPI_HandleTypeDef *hspi){
 
 void timer11_period_elapsed(TIM_HandleTypeDef *htim){
 	tim11_count ++;
+	printf("Client alive msg.. %d\r\n",tim11_count);
+
 	//HAL_SPI_Receive_DMA(&hspi1, spi_rx_buf, SPI_RX_BUF_SIZE);
 	//HAL_SPI_Receive_IT(&hspi1, spi_rx_buf, SPI_RX_BUF_SIZE);
-	printf("Client alive msg.. %d\r\n",tim11_count);
 	//CDC_Transmit_FS((uint8_t *) "Hello world \r\n",14);
 }
 
@@ -163,22 +162,8 @@ void process_transfer_uart_rx_buf(uint8_t remaining_bytes){
 void timer10_period_elapsed(TIM_HandleTypeDef *htim){
 	tim10_count ++;
 
-#ifdef USING_DMA_UART
 	uart_rx_dma_remaining_bytes = __HAL_DMA_GET_COUNTER(&hdma_usart2_rx);
 	process_transfer_uart_rx_buf(uart_rx_dma_remaining_bytes);
-
-#else
-	if (huart2.RxState == HAL_UART_STATE_BUSY_RX){ //Checking against the second bit of rxState
-		HAL_UART_AbortReceive(&huart2,0);
-		if((huart2.RxXferSize - huart2.RxXferCount) > 0){
-			uart2_tx_buf.write_to_queue((char*) rx_buf, (huart2.RxXferSize - huart2.RxXferCount));
-		}
-	}
-
-	if (huart2.RxState == HAL_UART_STATE_READY){
-		HAL_UART_Receive_IT(&huart2, rx_buf, UART_RX_BUF_SIZE);
-	}
-#endif
 
 	if ((uart2_tx_buf.length_of_ongoing_transmission() == 0) && (uart2_tx_buf.length_of_queue() > 0)){
 			//std::tie (char* tx_buf, uint8_t tx_count) = uart2_tx_buf.longest_possible_send();
@@ -193,21 +178,12 @@ void timer10_period_elapsed(TIM_HandleTypeDef *htim){
 void uart_rx_complete(UART_HandleTypeDef *huart){
 	process_transfer_uart_rx_buf(0);
 
-#ifdef USING_DMA_UART
-	#ifndef USING_CIRCULAR_DMA
-	HAL_UART_Receive_DMA(&huart2, rx_buf, UART_RX_BUF_SIZE);
-	#endif
-#else
-	HAL_UART_Receive_IT(&huart2, rx_buf, UART_RX_BUF_SIZE);
-#endif
-
 	uart_rx_count ++;
 }
 
 void uart_tx_complete(UART_HandleTypeDef *huart){
 	uart2_tx_buf.send_complete();
 }
-
 
 
 extern "C" int _write(int file, char *ptr, int len);
