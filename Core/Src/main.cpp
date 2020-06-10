@@ -23,7 +23,7 @@
 #include "usb_device.h"
 #include <cstdio>
 #include "circular_buffer.hpp"
-#include "usbd_cdc_if.h"
+//#include "usbd_cdc_if.h"
 
 /* Private includes ----------------------------------------------------------*/
 /* USER CODE BEGIN Includes */
@@ -68,7 +68,7 @@ int keyboard_event_num = 0;
 int gpio_pa8_interrupt_count = 0;
 
 #define UART_RX_BUF_SIZE 128
-#define USB_CDC_TX_BUF_SIZE 512
+#define UART_TX_BUF_SIZE 512
 #define SPI_RX_BUF_SIZE 17
 
 #define USING_DMA_UART 1
@@ -84,7 +84,7 @@ uint8_t rx_buf_read_pos = 0;
 uint8_t rx_buf[UART_RX_BUF_SIZE];
 
 uint8_t spi_rx_buf[] = "Test Test Test Test Test ";
-CircularBuffer<USB_CDC_TX_BUF_SIZE> uart2_tx_buf;
+CircularBuffer<UART_TX_BUF_SIZE> uart2_tx_buf;
 
 /* USER CODE END PV */
 
@@ -180,16 +180,14 @@ void timer10_period_elapsed(TIM_HandleTypeDef *htim){
 	}
 #endif
 
-	if(CDC_Transmit_Done() == 0){
-		uart2_tx_buf.send_complete();
-		if ((uart2_tx_buf.length_of_ongoing_transmission() == 0) && (uart2_tx_buf.length_of_queue() > 0)){
-				//std::tie (char* tx_buf, uint8_t tx_count) = uart2_tx_buf.longest_possible_send();
-				auto [ tx_buf, tx_count ] = uart2_tx_buf.longest_possible_send();
-				//HAL_UART_Transmit_DMA(&huart2,(uint8_t*) tx_buf, tx_count);
-				CDC_Transmit_FS((uint8_t*) tx_buf, tx_count);
-		}
+	if ((uart2_tx_buf.length_of_ongoing_transmission() == 0) && (uart2_tx_buf.length_of_queue() > 0)){
+			//std::tie (char* tx_buf, uint8_t tx_count) = uart2_tx_buf.longest_possible_send();
+			auto [ tx_buf, tx_count ] = uart2_tx_buf.longest_possible_send();
+			HAL_UART_Transmit_DMA(&huart2,(uint8_t*) tx_buf, tx_count);
+			//CDC_Transmit_FS((uint8_t*) tx_buf, tx_count);
 	}
 }
+
 
 
 void uart_rx_complete(UART_HandleTypeDef *huart){
@@ -205,6 +203,12 @@ void uart_rx_complete(UART_HandleTypeDef *huart){
 
 	uart_rx_count ++;
 }
+
+void uart_tx_complete(UART_HandleTypeDef *huart){
+	uart2_tx_buf.send_complete();
+}
+
+
 
 extern "C" int _write(int file, char *ptr, int len);
 int _write(int file, char *ptr, int len)
@@ -259,6 +263,7 @@ int main(void)
   HAL_TIM_RegisterCallback(&htim10,HAL_TIM_PERIOD_ELAPSED_CB_ID, timer10_period_elapsed);
 //  HAL_UART_RegisterCallback(&huart2, HAL_UART_TX_COMPLETE_CB_ID, uart_transfer_completed);
   HAL_UART_RegisterCallback(&huart2, HAL_UART_RX_COMPLETE_CB_ID, uart_rx_complete);
+  HAL_UART_RegisterCallback(&huart2, HAL_UART_TX_COMPLETE_CB_ID, uart_tx_complete);
   HAL_SPI_RegisterCallback(&hspi1, HAL_SPI_RX_COMPLETE_CB_ID, spi_rx_complete);
   //HAL_SPI_RegisterCallback(&hspi1, HAL_SPI_RX_HALF_COMPLETE_CB_ID, spi_half_rx_complete);
   HAL_SPI_RegisterCallback(&hspi1, HAL_SPI_ERROR_CB_ID, spi_rx_error);
