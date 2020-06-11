@@ -21,7 +21,7 @@
 /* Includes ------------------------------------------------------------------*/
 #include "main.h"
 #include "usb_device.h"
-#include "usbd_hid.h"
+#include "usbd_custom_hid_if.h"
 #include <cstdio>
 #include "circular_buffer.hpp"
 
