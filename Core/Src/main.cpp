@@ -21,6 +21,7 @@
 /* Includes ------------------------------------------------------------------*/
 #include "main.h"
 #include "usb_device.h"
+#include "usbd_hid.h"
 #include <cstdio>
 #include "circular_buffer.hpp"
 
@@ -246,12 +247,11 @@ int main(void)
   HAL_TIM_Base_Start_IT(&htim10);
 
   /* USER CODE END 2 */
-#ifdef USING_DMA_UART
 	HAL_UART_Receive_DMA(&huart2, rx_buf, UART_RX_BUF_SIZE);
-#else
-	HAL_UART_Receive_IT(&huart2, rx_buf, UART_RX_BUF_SIZE);
-#endif
 	HAL_SPI_Receive_DMA(&hspi1, spi_rx_buf, 9);
+
+	HAL_Delay(3000);
+	uint32_t pI =  USBD_HID_GetPollingInterval(&hUsbDeviceFS);
 
   /* Infinite loop */
   /* USER CODE BEGIN WHILE */
