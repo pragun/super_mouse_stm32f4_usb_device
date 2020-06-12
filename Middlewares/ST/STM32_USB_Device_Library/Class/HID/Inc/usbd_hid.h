@@ -49,7 +49,7 @@
 
  //#define HID_MOUSE_REPORT_DESC_SIZE    103U
 
-#define HID_MOUSE_REPORT_DESC_SIZE    113U
+#define HID_MOUSE_REPORT_DESC_SIZE    141U
 
 #define HID_DESCRIPTOR_TYPE           0x21U
 #define HID_REPORT_DESC               0x22U

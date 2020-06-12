@@ -162,7 +162,7 @@ void HAL_GPIO_EXTI_Callback(uint16_t GPIO_Pin)
 void spi_rx_complete(SPI_HandleTypeDef *hspi){
 	spi_rx_count ++ ;
 
-	printf("SPI RX Complete: %d\r\n Received:\r\n",spi_rx_count);
+	printf("SPI RX : %d\r\n",spi_rx_count);
 	PrintHexBuf(spi_rx_buf,9);
 
 	spi_mouse_state_rx = (SPI_MMO_Mouse_State_TypeDef*) spi_rx_buf;
@@ -177,7 +177,7 @@ void spi_rx_complete(SPI_HandleTypeDef *hspi){
 	//spi_rx_buf[SPI_RX_BUF_SIZE] = 0;
 	//printf("Rcv:{%s}\r\n",spi_rx_buf);
 
-	printf("X:%d Y:%d Z:%d B:0x%x \n",mouse_x,mouse_y,scroll_y,button_state);
+	printf("X:%d Y:%d Z:%d B:0x%x \r\n",mouse_x,mouse_y,scroll_y,button_state);
 }
 
 void spi_half_rx_complete(SPI_HandleTypeDef *hspi){

@@ -360,11 +360,27 @@ __ALIGN_BEGIN static uint8_t HID_MOUSE_ReportDesc[HID_MOUSE_REPORT_DESC_SIZE]  _
 	0xc0,                          //   END_COLLECTION
 	0xc0,                           // END_COLLECTION
 
+	0x05, 0x01,        // Usage Page (Generic Desktop Ctrls)
+	0x09, 0x06,        // Usage (Keyboard)
+	0xA1, 0x01,        // Collection (Application)
+	0xa1, 0x02,        //   COLLECTION (Logical)
+	0x85, 0x02,        //   Report ID (2)
+	0x05, 0x07,        //   Usage Page (Kbrd/Keypad)
+	0x95, 0x04,        //   Report Count (4)
+	0x75, 0x08,        //   Report Size (8)
+	0x15, 0x00,        //   Logical Minimum (0)
+	0x25, 0xE7,        //   Logical Maximum (100)
+	0x19, 0x00,        //   Usage Minimum (0x00)
+	0x29, 0xE7,        //   Usage Maximum (0x65)
+	0x81, 0x00,        //   Input (Data,Array,Abs,No Wrap,Linear,Preferred State,No Null Position)
+	0xC0,              // End Collection
+	0xC0,              // End Collection
+
     0x06, 0x00, 0xff,              // USAGE_PAGE (Vendor Defined Page 1)
     0x09, 0x00,                    // USAGE (Undefined)
     0xa1, 0x01,                    // COLLECTION (Application)
     0xa1, 0x02,                    //   COLLECTION (Logical)
-    0x85, 0x02,                    //     REPORT_ID (2)
+    0x85, 0x03,                    //     REPORT_ID (3)
     0x09, 0x00,                    //     USAGE (Undefined)
     0x75, 0x20,                    //     REPORT_SIZE (32)
     0x95, 0x04,                    //     REPORT_COUNT (4)
@@ -372,7 +388,7 @@ __ALIGN_BEGIN static uint8_t HID_MOUSE_ReportDesc[HID_MOUSE_REPORT_DESC_SIZE]  _
     0xc0,                          //   END_COLLECTION
 
     0xa1, 0x02,                    //   COLLECTION (Logical)
-    0x85, 0x03,                    //     REPORT_ID (3)
+    0x85, 0x04,                    //     REPORT_ID (4)
     0x09, 0x00,                    //     USAGE (Undefined)
     0x75, 0x20,                    //     REPORT_SIZE (32)
     0x95, 0x04,                    //     REPORT_COUNT (4)
