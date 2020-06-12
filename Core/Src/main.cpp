@@ -91,15 +91,6 @@ int16_t del_x = 0;
 int16_t del_y = 0;
 int8_t del_z = 0;
 
-typedef struct
-{
-    uint8_t report_id;
-    uint8_t buttons;
-    int16_t mouse_x;
-    int16_t mouse_y;
-    int8_t scroll_y;
-}
-Mouse_HID_Report_TypeDef;
 
 typedef struct
 {
@@ -110,9 +101,8 @@ typedef struct
     int8_t scroll_y;
     int8_t scroll_x;
 }
-Mouse_HID_Report_TypeDef2;
+Mouse_HID_Report_TypeDef;
 
-Mouse_HID_Report_TypeDef2 mouse_hid_report2;
 Mouse_HID_Report_TypeDef mouse_hid_report;
 
 
@@ -221,19 +211,13 @@ void timer10_period_elapsed(TIM_HandleTypeDef *htim){
 void timer9_period_elapsed(TIM_HandleTypeDef *htim){
 	tim9_count ++;
 	if ((mouse_x != 0)||(mouse_y != 0)||(scroll_y !=0 )){
-		mouse_hid_report.report_id = 1;
+
+		mouse_hid_report.report_id = 0x01;
 		mouse_hid_report.mouse_x = mouse_x;
 		mouse_hid_report.mouse_y = mouse_y;
-		mouse_hid_report.scroll_y = scroll_y;
-		mouse_hid_report.buttons = 0;
-		//USBD_HID_SendReport (&hUsbDeviceFS, (uint8_t*) &mouse_hid_report, 7);
-
-		mouse_hid_report2.report_id = 0x01;
-		mouse_hid_report2.mouse_x = mouse_x;
-		mouse_hid_report2.mouse_y = mouse_y;
-		mouse_hid_report2.scroll_x = scroll_y;
-		mouse_hid_report2.scroll_y = 0;
-		USBD_HID_SendReport (&hUsbDeviceFS, (uint8_t*) &mouse_hid_report2, 8);
+		mouse_hid_report.scroll_x = scroll_y;
+		mouse_hid_report.scroll_y = 0;
+		USBD_HID_SendReport (&hUsbDeviceFS, (uint8_t*) &mouse_hid_report, 8);
 
 		mouse_x = 0;
 		mouse_y = 0;
