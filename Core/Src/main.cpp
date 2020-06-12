@@ -85,7 +85,8 @@ int16_t mouse_x = 0;
 int16_t mouse_y = 0;
 int16_t scroll_x = 0;
 int16_t scroll_y = 0;
-uint32_t button_state = 0;
+uint8_t button_state = 0;
+uint8_t last_button_state = 0;
 
 int16_t del_x = 0;
 int16_t del_y = 0;
@@ -150,8 +151,10 @@ void HAL_GPIO_EXTI_Callback(uint16_t GPIO_Pin)
 
 void spi_rx_complete(SPI_HandleTypeDef *hspi){
 	spi_rx_count ++ ;
+
 	printf("SPI RX Complete: %d\r\n Received:\r\n",spi_rx_count);
 	PrintHexBuf(spi_rx_buf,9);
+
 	del_x = (spi_rx_buf[1] << 8) | spi_rx_buf[0];
 	del_y =  (spi_rx_buf[3] << 8) | spi_rx_buf[2];
 	del_z = spi_rx_buf[4];
@@ -160,9 +163,14 @@ void spi_rx_complete(SPI_HandleTypeDef *hspi){
 	mouse_y += del_y;
 	scroll_y += del_z;
 
+	button_state = spi_rx_buf[5] & 0x07;
+	//button_state |= (spi_rx_buf[5] & 0x01) << 7;
+	//button_state |= (spi_rx_buf[5] & 0x02) << 5;
+	//button_state |= (spi_rx_buf[5] & 0x04) << 3;
+
 	//spi_rx_buf[SPI_RX_BUF_SIZE] = 0;
 	//printf("Rcv:{%s}\r\n",spi_rx_buf);
-	printf("X:%d Y:%d Z:%d\n",mouse_x,mouse_y,scroll_y);
+	printf("X:%d Y:%d Z:%d B:0x%x \n",mouse_x,mouse_y,scroll_y,button_state);
 }
 
 void spi_half_rx_complete(SPI_HandleTypeDef *hspi){
@@ -210,13 +218,15 @@ void timer10_period_elapsed(TIM_HandleTypeDef *htim){
 
 void timer9_period_elapsed(TIM_HandleTypeDef *htim){
 	tim9_count ++;
-	if ((mouse_x != 0)||(mouse_y != 0)||(scroll_y !=0 )){
+	if ((mouse_x != 0)||(mouse_y != 0)||(scroll_y !=0)||(last_button_state != button_state)){
 
 		mouse_hid_report.report_id = 0x01;
 		mouse_hid_report.mouse_x = mouse_x;
 		mouse_hid_report.mouse_y = mouse_y;
 		mouse_hid_report.scroll_x = scroll_y;
 		mouse_hid_report.scroll_y = 0;
+		mouse_hid_report.buttons = button_state;
+		last_button_state = button_state;
 		USBD_HID_SendReport (&hUsbDeviceFS, (uint8_t*) &mouse_hid_report, 8);
 
 		mouse_x = 0;
