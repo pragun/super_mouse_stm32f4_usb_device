@@ -92,7 +92,6 @@ int16_t del_x = 0;
 int16_t del_y = 0;
 int8_t del_z = 0;
 
-
 typedef struct
 {
     uint8_t report_id;
@@ -106,6 +105,17 @@ Mouse_HID_Report_TypeDef;
 
 Mouse_HID_Report_TypeDef mouse_hid_report;
 
+#pragma pack(1)
+typedef struct
+{
+	int16_t dx;
+	int16_t dy;
+	int8_t dz;
+	uint32_t buttons;
+}
+SPI_MMO_Mouse_State_TypeDef;
+
+SPI_MMO_Mouse_State_TypeDef* spi_mouse_state_rx;
 
 uint8_t rx_buf_read_pos = 0;
 uint8_t rx_buf[UART_RX_BUF_SIZE];
@@ -155,21 +165,18 @@ void spi_rx_complete(SPI_HandleTypeDef *hspi){
 	printf("SPI RX Complete: %d\r\n Received:\r\n",spi_rx_count);
 	PrintHexBuf(spi_rx_buf,9);
 
-	del_x = (spi_rx_buf[1] << 8) | spi_rx_buf[0];
-	del_y =  (spi_rx_buf[3] << 8) | spi_rx_buf[2];
-	del_z = spi_rx_buf[4];
+	spi_mouse_state_rx = (SPI_MMO_Mouse_State_TypeDef*) spi_rx_buf;
 
-	mouse_x += del_x;
-	mouse_y += del_y;
-	scroll_y += del_z;
 
-	button_state = spi_rx_buf[5] & 0x07;
-	//button_state |= (spi_rx_buf[5] & 0x01) << 7;
-	//button_state |= (spi_rx_buf[5] & 0x02) << 5;
-	//button_state |= (spi_rx_buf[5] & 0x04) << 3;
+	mouse_x += spi_mouse_state_rx->dx;
+	mouse_y += spi_mouse_state_rx->dy;
+	scroll_y += spi_mouse_state_rx->dz;
+
+	button_state = spi_mouse_state_rx->buttons & 0x0F;
 
 	//spi_rx_buf[SPI_RX_BUF_SIZE] = 0;
 	//printf("Rcv:{%s}\r\n",spi_rx_buf);
+
 	printf("X:%d Y:%d Z:%d B:0x%x \n",mouse_x,mouse_y,scroll_y,button_state);
 }
 
