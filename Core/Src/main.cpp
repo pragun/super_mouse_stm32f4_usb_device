@@ -61,6 +61,7 @@ DMA_HandleTypeDef hdma_usart2_tx;
 
 int tim11_count = 0;
 int tim10_count = 0;
+int tim9_count = 0;
 int uart_rx_count = 0;
 int usb_event_num = 0;
 int mouse_event_num = 0;
@@ -79,6 +80,41 @@ int spi_error_count = 0;
 int spi_half_rx_count = 0;
 const uint16_t keep_alive_period = 50'000;
 uint32_t uart_rx_dma_remaining_bytes = 0;
+
+int16_t mouse_x = 0;
+int16_t mouse_y = 0;
+int16_t scroll_x = 0;
+int16_t scroll_y = 0;
+uint32_t button_state = 0;
+
+int16_t del_x = 0;
+int16_t del_y = 0;
+int8_t del_z = 0;
+
+typedef struct
+{
+    uint8_t report_id;
+    uint8_t buttons;
+    int16_t mouse_x;
+    int16_t mouse_y;
+    int8_t scroll_y;
+}
+Mouse_HID_Report_TypeDef;
+
+typedef struct
+{
+    uint8_t report_id;
+	uint8_t buttons;
+    int16_t mouse_x;
+    int16_t mouse_y;
+    int8_t scroll_y;
+    int8_t scroll_x;
+}
+Mouse_HID_Report_TypeDef2;
+
+Mouse_HID_Report_TypeDef2 mouse_hid_report2;
+Mouse_HID_Report_TypeDef mouse_hid_report;
+
 
 uint8_t rx_buf_read_pos = 0;
 uint8_t rx_buf[UART_RX_BUF_SIZE];
@@ -126,8 +162,17 @@ void spi_rx_complete(SPI_HandleTypeDef *hspi){
 	spi_rx_count ++ ;
 	printf("SPI RX Complete: %d\r\n Received:\r\n",spi_rx_count);
 	PrintHexBuf(spi_rx_buf,9);
-	spi_rx_buf[SPI_RX_BUF_SIZE] = 0;
-	printf("Rcv:{%s}\r\n",spi_rx_buf);
+	del_x = (spi_rx_buf[1] << 8) | spi_rx_buf[0];
+	del_y =  (spi_rx_buf[3] << 8) | spi_rx_buf[2];
+	del_z = spi_rx_buf[4];
+
+	mouse_x += del_x;
+	mouse_y += del_y;
+	scroll_y += del_z;
+
+	//spi_rx_buf[SPI_RX_BUF_SIZE] = 0;
+	//printf("Rcv:{%s}\r\n",spi_rx_buf);
+	printf("X:%d Y:%d Z:%d\n",mouse_x,mouse_y,scroll_y);
 }
 
 void spi_half_rx_complete(SPI_HandleTypeDef *hspi){
@@ -173,10 +218,32 @@ void timer10_period_elapsed(TIM_HandleTypeDef *htim){
 }
 
 
+void timer9_period_elapsed(TIM_HandleTypeDef *htim){
+	tim9_count ++;
+	if ((mouse_x != 0)||(mouse_y != 0)||(scroll_y !=0 )){
+		mouse_hid_report.report_id = 1;
+		mouse_hid_report.mouse_x = mouse_x;
+		mouse_hid_report.mouse_y = mouse_y;
+		mouse_hid_report.scroll_y = scroll_y;
+		mouse_hid_report.buttons = 0;
+		//USBD_HID_SendReport (&hUsbDeviceFS, (uint8_t*) &mouse_hid_report, 7);
+
+		mouse_hid_report2.report_id = 0x01;
+		mouse_hid_report2.mouse_x = mouse_x;
+		mouse_hid_report2.mouse_y = mouse_y;
+		mouse_hid_report2.scroll_x = scroll_y;
+		mouse_hid_report2.scroll_y = 0;
+		USBD_HID_SendReport (&hUsbDeviceFS, (uint8_t*) &mouse_hid_report2, 8);
+
+		mouse_x = 0;
+		mouse_y = 0;
+		scroll_y = 0;
+	}
+}
+
 
 void uart_rx_complete(UART_HandleTypeDef *huart){
 	process_transfer_uart_rx_buf(0);
-
 	uart_rx_count ++;
 }
 
@@ -236,6 +303,8 @@ int main(void)
 
   HAL_TIM_RegisterCallback(&htim11,HAL_TIM_PERIOD_ELAPSED_CB_ID, timer11_period_elapsed);
   HAL_TIM_RegisterCallback(&htim10,HAL_TIM_PERIOD_ELAPSED_CB_ID, timer10_period_elapsed);
+  HAL_TIM_RegisterCallback(&htim9,HAL_TIM_PERIOD_ELAPSED_CB_ID, timer9_period_elapsed);
+
 //  HAL_UART_RegisterCallback(&huart2, HAL_UART_TX_COMPLETE_CB_ID, uart_transfer_completed);
   HAL_UART_RegisterCallback(&huart2, HAL_UART_RX_COMPLETE_CB_ID, uart_rx_complete);
   HAL_UART_RegisterCallback(&huart2, HAL_UART_TX_COMPLETE_CB_ID, uart_tx_complete);
@@ -245,19 +314,20 @@ int main(void)
 
   HAL_TIM_Base_Start_IT(&htim11);
   HAL_TIM_Base_Start_IT(&htim10);
+  HAL_TIM_Base_Start_IT(&htim9);
 
   /* USER CODE END 2 */
-	HAL_UART_Receive_DMA(&huart2, rx_buf, UART_RX_BUF_SIZE);
-	HAL_SPI_Receive_DMA(&hspi1, spi_rx_buf, 9);
-
-	HAL_Delay(3000);
-	uint32_t pI =  USBD_HID_GetPollingInterval(&hUsbDeviceFS);
+  HAL_UART_Receive_DMA(&huart2, rx_buf, UART_RX_BUF_SIZE);
+  HAL_SPI_Receive_DMA(&hspi1, spi_rx_buf, 9);
 
   /* Infinite loop */
   /* USER CODE BEGIN WHILE */
+  uint32_t pI = 0;
   while (1)
   {
     /* USER CODE END WHILE */
+	  HAL_Delay(3000);
+	   pI =  USBD_HID_GetPollingInterval(&hUsbDeviceFS);
 
     /* USER CODE BEGIN 3 */
   }
@@ -362,7 +432,7 @@ static void MX_TIM9_Init(void)
   htim9.Instance = TIM9;
   htim9.Init.Prescaler = 8400;
   htim9.Init.CounterMode = TIM_COUNTERMODE_UP;
-  htim9.Init.Period = 0;
+  htim9.Init.Period = 100;
   htim9.Init.ClockDivision = TIM_CLOCKDIVISION_DIV1;
   htim9.Init.AutoReloadPreload = TIM_AUTORELOAD_PRELOAD_DISABLE;
   if (HAL_TIM_Base_Init(&htim9) != HAL_OK)
