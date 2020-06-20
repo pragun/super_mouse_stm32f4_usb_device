@@ -93,7 +93,7 @@ uint16_t UART_Tx_CircularBuffer::mark_transferred(uint16_t n) {
 }
 
 uint16_t UART_Tx_CircularBuffer::last_send_complete() {
-	return ring_buf.mark_transferred< RingState::Sending, RingState::ClearToWrite >( ring_buf.get_num_elements<RingState::Sending>());
+	return ring_buf.mark_transferred< RingState::Sending, RingState::ClearToWrite >(ring_buf.get_num_elements<RingState::Sending>());
 }
 
 uint16_t UART_Tx_CircularBuffer::length_of_empty_region(){

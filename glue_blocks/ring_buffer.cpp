@@ -158,8 +158,9 @@ class RingBuffer
 	template <RingStateEnum from_state, RingStateEnum to_state>
 	inline std::tuple<storage_type*, index_type> get_next_continuous_transfer_buffer(){
 		index_type num = std::min(get_num_elements<from_state>(), (index_type) (buffer_size - get_starting_index<from_state>()));
+		index_type starting_index = get_starting_index<from_state>();
 		mark_transferred<from_state, to_state>(num);
-		return std::make_tuple(&buffer[get_starting_index<from_state>()],num);
+		return std::make_tuple(&buffer[starting_index],num);
 	}
 
 	template <RingStateEnum from_state, RingStateEnum to_state, bool trim_enabled>
