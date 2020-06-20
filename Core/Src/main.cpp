@@ -19,11 +19,11 @@
 /* USER CODE END Header */
 
 /* Includes ------------------------------------------------------------------*/
+#include <circular_buffers.hpp>
 #include "main.h"
 #include "usb_device.h"
 #include "usbd_hid.h"
 #include <cstdio>
-#include "circular_buffer.hpp"
 
 /* Private includes ----------------------------------------------------------*/
 /* USER CODE BEGIN Includes */
@@ -137,7 +137,7 @@ uint8_t rx_buf_read_pos = 0;
 uint8_t rx_buf[UART_RX_BUF_SIZE];
 
 uint8_t spi_rx_buf[] = "Test Test Test Test Test ";
-CircularBuffer<UART_TX_BUF_SIZE> uart2_tx_buf;
+UART_Tx_CircularBuffer uart2_tx_buf;
 
 /* USER CODE END PV */
 
@@ -273,7 +273,7 @@ void uart_rx_complete(UART_HandleTypeDef *huart){
 }
 
 void uart_tx_complete(UART_HandleTypeDef *huart){
-	uart2_tx_buf.send_complete();
+	uart2_tx_buf.last_send_complete();
 }
 
 

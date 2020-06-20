@@ -56,11 +56,6 @@ class RingBuffer
 	}
 
 	template <RingStateEnum state>
-	inline index_type get_num_elements(){
-		return num_elements[static_cast<index_type>(state)];
-	}
-
-	template <RingStateEnum state>
 	inline index_type get_starting_index(){
 			return starting_index[static_cast<index_type>(state)];
 	}
@@ -86,6 +81,11 @@ class RingBuffer
 		}
 		num_elements[0] = buffer_size;
 	};
+
+	template <RingStateEnum state>
+	inline index_type get_num_elements(){
+		return num_elements[static_cast<index_type>(state)];
+	}
 
 	template <RingStateEnum from_state, RingStateEnum to_state>
 	inline index_type copy_in_without_rollover(index_type num, const storage_type* input_buffer){

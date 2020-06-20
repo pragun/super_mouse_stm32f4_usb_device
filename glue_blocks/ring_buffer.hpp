@@ -44,9 +44,6 @@ class RingBuffer
 	inline std::tuple<index_type, index_type> get_continuous_segment_sizes();
 
 	template <RingStateEnum state>
-	inline index_type get_num_elements();
-
-	template <RingStateEnum state>
 	inline index_type get_starting_index();
 
 	template <RingStateEnum state>
@@ -57,6 +54,9 @@ class RingBuffer
 
 	public:
 	RingBuffer();
+
+	template <RingStateEnum state>
+	inline index_type get_num_elements();
 
 	template <RingStateEnum from_state, RingStateEnum to_state>
 	inline index_type copy_in_without_rollover(index_type num, const storage_type* input_buffer);
