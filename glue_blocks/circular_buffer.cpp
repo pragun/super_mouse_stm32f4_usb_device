@@ -98,6 +98,7 @@ int16_t CircularBuffer<max>::length_of_empty_region(){
 		 *  */
 		return (s - e);
 	}
+
 	return 0;
 }
 
@@ -205,89 +206,6 @@ std::tuple<char*, int16_t> CircularBuffer<max>::longest_possible_send(){
 		return std::make_tuple(&buffer[old_q],s1);
 	}
 }
-
-template <int16_t max>
-std::tuple<char*, int16_t> CircularBuffer<max>::longest_possible_send(){
-// this makes sense to be called only when there is nothing that is being sent out
-// in other words, right after we've heard acknowledgement that the previous tx has completed
-	//assert(s == q);
-	int16_t s1 = 0;
-	int16_t old_q = q;
-	if(q <= e){
-		s1 = (e - q);
-		q = e;
-		return std::make_tuple(&buffer[old_q],s1);
-	}else{
-		s1 = (max - q);
-		q = 0; //wrap around
-		return std::make_tuple(&buffer[old_q],s1);
-	}
-}
-
-
-
-// Dangerous function, does not check if buff can be written on longer than num.
-// Might lead to a segfault
-template <int16_t max>
-int16_t CircularBuffer<max>::danger_move_n_bytes_onto_buff_and_mark_as_txing(int16_t num, char* buff){
-// this makes sense to be called only when there is nothing that is being sent out
-// in other words, right after we've heard acknowledgement that the previous tx has completed
-// // Assert (s == q): Which means that all ongoing transmissions have completed
-// It will move the indices to mark that the data has been tx'ed
-// It will return 0 if there is not enough data as requested
-
-	int16_t contiguous_size = 0;
-	int16_t old_q = q;
-
-	if(q <= e){
-		/**
-		 * This means that the buffer looks like
-		 * |X|X|X|X|X|X|X|X|X|X|X|X|X|X|X|X|X|X|X|X|X|X|X|X|X|X|X|c|a|t|X|X|X|X|X||X|X||X|
-		 * |--- already tx'ed----|------------------tx queue --------- | already tx`ed --|
-		 *  0                   s,q                                    e                 max
-		 *  */
-		//
-
-		contiguous_size = (e - q);
-		if (contiguous_size < num){
-			return 0;
-		}else{
-			q = q + num;
-			std::memcpy(buff,&buffer[s],num);
-			return num;
-		}
-	}
-	else{
-		/**
-		 * This means that the buffer looks like
-		 * |l|d|!|!|!|X|X|X|X|X|X|X|X|X|X|X|X|X|X|X|X|X|X|X|X|X|X|c|a|t|H|e|l|l|o| |W|o|r|
-		 * |tx queue-|--- already tx'ed----------|-------------------------- tx queue ---|
-		 *  0         e                         s,q                                       max
-		 **/
-
-		contiguous_size = (max - q);
-
-		if (contiguous_size < num){
-			if ((num-contigous_size) > e){ // This means that there are not as many characters
-										   // even after wrapping up
-				return 0;
-			}
-			else{
-				std::memcpy(buff, &buffer[s], contiguous_size);
-				std::memcpy(buff[contiguous_size], &buffer[0], (num - contiguous_size));
-				q = num - contiguous_size;
-			}
-		}else{
-			q = q + num;
-			std::memcpy(buff,&buffer[s],num);
-			return num;
-		}
-
-		q = 0; //wrap around
-		return std::make_tuple(&buffer[old_q],contiguous_size);
-	}
-}
-
 
 
 template <int16_t max>
