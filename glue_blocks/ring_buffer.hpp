@@ -75,10 +75,9 @@ class RingBuffer
 	template <RingStateEnum from_state, RingStateEnum to_state>
 	inline std::tuple<storage_type*, index_type> get_next_continuous_transfer_buffer();
 
-	template <RingStateEnum from_state, RingStateEnum to_state>
+	template <RingStateEnum from_state, RingStateEnum to_state, bool trim_enabled>
 	inline storage_type* get_transfer_buffer(index_type num);
 
-
-enum class RingState {ClearToWrite, Queued, Sending};
+};
 
 #endif /* RING_BUFFER_HPP_ */

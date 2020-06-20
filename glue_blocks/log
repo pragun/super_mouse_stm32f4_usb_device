@@ -1,0 +1,148 @@
+
+
+Testing trim enabled
+I do get called
+B Pointer:0x7fffdfe799e0
+Buffer:
+ 
+Address:0x7fffdfe799e0
+State:0, Starting Index:0, Size:15
+State:1, Starting Index:0, Size:0
+State:2, Starting Index:0, Size:0
+
+Writing to buffer..
+Buffer:
+ 
+Address:0x7fffdfe799e0
+State:0, Starting Index:6, Size:9
+State:1, Starting Index:0, Size:6
+State:2, Starting Index:0, Size:0
+
+Writing to buffer..
+Buffer:
+ 
+Address:0x7fffdfe799e0
+State:0, Starting Index:12, Size:3
+State:1, Starting Index:0, Size:12
+State:2, Starting Index:0, Size:0
+
+Transferring 8 bytes from Queued to Sending..
+Buffer:
+ 
+Address:0x7fffdfe799e0
+State:0, Starting Index:12, Size:3
+State:1, Starting Index:8, Size:4
+State:2, Starting Index:0, Size:8
+
+Transferring 8 bytes from Sending to ClearToWrite..
+Buffer:
+ 
+Address:0x7fffdfe799e0
+State:0, Starting Index:12, Size:11
+State:1, Starting Index:8, Size:4
+State:2, Starting Index:8, Size:0
+
+Writing to buffer..
+Buffer:
+ 
+Address:0x7fffdfe799e0
+State:0, Starting Index:6, Size:2
+State:1, Starting Index:8, Size:10
+State:2, Starting Index:8, Size:0
+
+Writing to buffer..
+Buffer:
+ 
+Address:0x7fffdfe799e0
+State:0, Starting Index:6, Size:2
+State:1, Starting Index:8, Size:10
+State:2, Starting Index:8, Size:0
+
+Transferring 7 bytes from Queued to Sending..
+Buffer:
+ 
+Address:0x7fffdfe799e0
+State:0, Starting Index:6, Size:2
+State:1, Starting Index:0, Size:6
+State:2, Starting Index:8, Size:7
+
+Transferring 7 bytes from Sending to ClearToWrite..
+Buffer:
+ 
+Address:0x7fffdfe799e0
+State:0, Starting Index:6, Size:9
+State:1, Starting Index:0, Size:6
+State:2, Starting Index:0, Size:0
+Testing trim disabled
+I do get called
+A Pointer:0x7fffdfe799e0
+Buffer:
+ 
+Address:0x7fffdfe799e0
+State:0, Starting Index:0, Size:16
+State:1, Starting Index:0, Size:0
+State:2, Starting Index:0, Size:0
+
+Writing to buffer..
+Buffer:
+Pragun 
+Address:0x7fffdfe799e0
+State:0, Starting Index:6, Size:10
+State:1, Starting Index:0, Size:6
+State:2, Starting Index:0, Size:0
+
+Writing to buffer..
+Buffer:
+PragunPragunþ 
+Address:0x7fffdfe799e0
+State:0, Starting Index:12, Size:4
+State:1, Starting Index:0, Size:12
+State:2, Starting Index:0, Size:0
+
+Transferring 8 bytes from Queued to Sending..
+Buffer:
+PragunPragunþ 
+Address:0x7fffdfe799e0
+State:0, Starting Index:12, Size:4
+State:1, Starting Index:8, Size:4
+State:2, Starting Index:0, Size:8
+
+Transferring 8 bytes from Sending to ClearToWrite..
+Buffer:
+PragunPragunþ 
+Address:0x7fffdfe799e0
+State:0, Starting Index:12, Size:12
+State:1, Starting Index:8, Size:4
+State:2, Starting Index:8, Size:0
+
+Writing to buffer..
+Buffer:
+unagunPragunPrag 
+Address:0x7fffdfe799e0
+State:0, Starting Index:2, Size:6
+State:1, Starting Index:8, Size:10
+State:2, Starting Index:8, Size:0
+
+Writing to buffer..
+Buffer:
+unGoyal agunPrag 
+Address:0x7fffdfe799e0
+State:0, Starting Index:8, Size:0
+State:1, Starting Index:8, Size:16
+State:2, Starting Index:8, Size:0
+
+Transferring 7 bytes from Queued to Sending..
+Buffer:
+unGoyal agunPrag 
+Address:0x7fffdfe799e0
+State:0, Starting Index:8, Size:0
+State:1, Starting Index:15, Size:9
+State:2, Starting Index:8, Size:7
+
+Transferring 7 bytes from Sending to ClearToWrite..
+Buffer:
+unGoyal agunPrag 
+Address:0x7fffdfe799e0
+State:0, Starting Index:8, Size:7
+State:1, Starting Index:15, Size:9
+State:2, Starting Index:15, Size:0

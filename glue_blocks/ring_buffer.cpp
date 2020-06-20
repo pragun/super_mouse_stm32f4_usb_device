@@ -9,7 +9,6 @@
 #include <cstring>
 #include <tuple>
 #include <algorithm>    // std::min
-#include "ring_buffer.hpp"
 
 template <typename storage_type, typename index_type, index_type max_buffer_size, bool enable_trimming, typename RingStateEnum, RingStateEnum... states>
 class RingBuffer
@@ -22,11 +21,11 @@ class RingBuffer
 	index_type starting_index[num_states]; // Starting index for the data in this state
 	index_type num_elements[num_states]; // Size of this section ring-state
 
-	constexpr static bool trim_enabled = enable_trimming;
+	//constexpr static bool trim_enabled = enable_trimming;
 
 	template <RingStateEnum state>
 	void inflate_to_full_size(){
-		static_assert(trim_enabled, "Trimming needs to be enabled to use inflate.");
+		//static_assert(trim_enabled, "Trimming needs to be enabled to use inflate.");
 		// Check if the buffer roll-over boundary falls within this ring state
 		if ((get_starting_index<state>()+get_num_elements<state>()) >= buffer_size){
 			set_num_elements<state>( get_num_elements<state>()+(max_buffer_size-buffer_size) );
@@ -36,7 +35,7 @@ class RingBuffer
 
 	template <RingStateEnum state>
 	void trim_to_start_at_buffer_zero(){
-		static_assert(trim_enabled, "Trimming needs to be enabled to use trim.");
+		//static_assert(trim_enabled, "Trimming needs to be enabled to use trim.");
 		// Check if the buffer roll-over boundary falls within this ring state
 		auto [lobe1,lobe2] = get_continuous_segment_sizes<state>();
 		if ((get_starting_index<state>() + get_num_elements<state>()) >= buffer_size){
@@ -90,10 +89,10 @@ class RingBuffer
 
 	template <RingStateEnum from_state, RingStateEnum to_state>
 	inline index_type copy_in_without_rollover(index_type num, const storage_type* input_buffer){
-		static_assert(trim_enabled, "Trimming needs to be enabled to use copying in without rollover.");
-		storage_type* copy_in_buffer = get_transfer_buffer<from_state, to_state>(num);
-		if (copy_in_buffer == nullptr){
-			std::memcpy( &copy_in_buffer, input_buffer, num);
+		//static_assert(trim_enabled, "Trimming needs to be enabled to use copying in without rollover.");
+		storage_type* copy_in_buffer = get_transfer_buffer<from_state, to_state, true>(num);
+		if (copy_in_buffer != nullptr){
+			std::memcpy( copy_in_buffer, input_buffer, num);
 			return num;
 		}
 		return 0;
@@ -158,12 +157,12 @@ class RingBuffer
 
 	template <RingStateEnum from_state, RingStateEnum to_state>
 	inline std::tuple<storage_type*, index_type> get_next_continuous_transfer_buffer(){
-		index_type num = std::min(get_num_elements<from_state>(), (buffer_size - get_starting_index<from_state>()));
+		index_type num = std::min(get_num_elements<from_state>(), (index_type) (buffer_size - get_starting_index<from_state>()));
 		mark_transferred<from_state, to_state>(num);
 		return std::make_tuple(&buffer[get_starting_index<from_state>()],num);
 	}
 
-	template <RingStateEnum from_state, RingStateEnum to_state>
+	template <RingStateEnum from_state, RingStateEnum to_state, bool trim_enabled>
 	inline storage_type* get_transfer_buffer(index_type num){
 		if constexpr(trim_enabled){
 			inflate_to_full_size<from_state>();
@@ -172,8 +171,9 @@ class RingBuffer
 		auto [lobe1,lobe2] = get_continuous_segment_sizes<from_state>();
 
 		if ( num <= lobe1 ){
+			index_type starting_index = get_starting_index<from_state>();
 			mark_transferred<from_state, to_state>(num);
-			return &buffer[get_starting_index<from_state>()];
+			return &buffer[starting_index];
 		}
 
 		if constexpr (trim_enabled){
@@ -187,91 +187,4 @@ class RingBuffer
 	}
 };
 
-
-enum class RingState {ClearToWrite, Queued, Sending};
-
-void test2(){
-	char txt[8] = "Pragun";
-	printf("\n\nTesting trim enabled\n");
-	RingBuffer<char, uint16_t, 15, true, RingState, RingState::ClearToWrite, RingState::Queued, RingState::Sending> b;
-	printf("B Pointer:%p\n",(void *) &b);
-	b.print_state();
-
-	printf("\nWriting to buffer..\n");
-	b.copy_in_without_rollover<RingState::ClearToWrite, RingState::Queued>(6, txt);
-	b.print_state();
-
-	printf("\nWriting to buffer..\n");
-	b.copy_in_without_rollover<RingState::ClearToWrite, RingState::Queued>(6, txt);
-	b.print_state();
-
-	printf("\nTransferring 8 bytes from Queued to Sending..\n",txt);
-	b.get_transfer_buffer<RingState::Queued, RingState::Sending>(8);
-	b.print_state();
-
-	printf("\nTransferring 8 bytes from Sending to ClearToWrite..\n",txt);
-	b.mark_transferred<RingState::Sending, RingState::ClearToWrite>(8);
-	b.print_state();
-
-	printf("\nWriting to buffer..\n");
-	b.copy_in_without_rollover<RingState::ClearToWrite, RingState::Queued>(6, txt);
-	b.print_state();
-
-	printf("\nWriting to buffer..\n");
-	b.copy_in_without_rollover<RingState::ClearToWrite, RingState::Queued>(6, "Goyal ");
-	b.print_state();
-
-	printf("\nTransferring 7 bytes from Queued to Sending..\n",txt);
-	b.get_transfer_buffer<RingState::Queued, RingState::Sending>(7);
-	b.print_state();
-
-	printf("\nTransferring 7 bytes from Sending to ClearToWrite..\n",txt);
-	b.mark_transferred<RingState::Sending, RingState::ClearToWrite>(7);
-	b.print_state();
-}
-
-void test1(){
-	char txt[8] = "Pragun";
-	printf("Testing trim disabled\n");
-	using RB1 = RingBuffer<char, uint16_t, 16, false, RingState, RingState::ClearToWrite, RingState::Queued, RingState::Sending>;
-	RB1 a;
-	printf("A Pointer:%p\n",(void *) &a);
-	a.print_state();
-
-	printf("\nWriting to buffer..\n");
-	a.copy_in_with_rollover<RingState::ClearToWrite, RingState::Queued>(6, txt);
-	a.print_state();
-
-	printf("\nWriting to buffer..\n");
-	a.copy_in_with_rollover<RingState::ClearToWrite, RingState::Queued>(6, txt);
-	a.print_state();
-
-	printf("\nTransferring 8 bytes from Queued to Sending..\n",txt);
-	a.get_transfer_buffer<RingState::Queued, RingState::Sending>(8);
-	a.print_state();
-
-	printf("\nTransferring 8 bytes from Sending to ClearToWrite..\n",txt);
-	a.mark_transferred<RingState::Sending, RingState::ClearToWrite>(8);
-	a.print_state();
-
-	printf("\nWriting to buffer..\n");
-	a.copy_in_with_rollover<RingState::ClearToWrite, RingState::Queued>(6, txt);
-	a.print_state();
-
-	printf("\nWriting to buffer..\n");
-	a.copy_in_with_rollover<RingState::ClearToWrite, RingState::Queued>(6, "Goyal ");
-	a.print_state();
-
-	printf("\nTransferring 7 bytes from Queued to Sending..\n",txt);
-	a.get_transfer_buffer<RingState::Queued, RingState::Sending>(7);
-	a.print_state();
-
-	printf("\nTransferring 7 bytes from Sending to ClearToWrite..\n",txt);
-	a.mark_transferred<RingState::Sending, RingState::ClearToWrite>(7);
-	a.print_state();
-}
-
-int main(){
-	test2();
-	test1();
-}
+#define RING_BUFFER_HPP_
