@@ -82,15 +82,17 @@ int spi_half_rx_count = 0;
 const uint16_t keep_alive_period = 50'000;
 uint32_t uart_rx_dma_remaining_bytes = 0;
 
-int16_t mouse_x = 0;
-int16_t mouse_y = 0;
-int16_t scroll_x = 0;
-int16_t scroll_y = 0;
-uint8_t primary_button_state = 0;
-uint8_t primary_last_button_state = 0;
+int16_t accumulated_mouse_del_x = 0;
+int16_t accumulated_mouse_del_y = 0;
 
-uint16_t keypad_button_state = 0;
-uint16_t keypad_last_button_state = 0;
+int16_t accumulated_scroll_x = 0;
+int16_t accumulated_scroll_y = 0;
+
+uint8_t current_primary_button_state = 0;
+uint8_t previous_primary_button_state = 0;
+
+uint16_t current_keypad_button_state = 0;
+uint16_t previous_keypad_button_state = 0;
 
 int16_t del_x = 0;
 int16_t del_y = 0;
@@ -107,7 +109,6 @@ typedef struct
 }
 Mouse_HID_Report_TypeDef;
 
-
 typedef struct
 {
     uint8_t report_id = 3;
@@ -116,7 +117,6 @@ typedef struct
     uint16_t mouse_y;
 }
 Absolute_Mouse_HID_Report_TypeDef;
-
 
 Mouse_HID_Report_TypeDef mouse_hid_report;
 Absolute_Mouse_HID_Report_TypeDef absolute_mouse_hid_report;
@@ -183,17 +183,17 @@ void spi_rx_complete(SPI_HandleTypeDef *hspi){
 
 	spi_mouse_state_rx = (SPI_MMO_Mouse_State_TypeDef*) spi_rx_buf;
 
-	mouse_x += spi_mouse_state_rx->dx;
-	mouse_y += spi_mouse_state_rx->dy;
-	scroll_y += spi_mouse_state_rx->dz;
+	accumulated_mouse_del_x += spi_mouse_state_rx->dx;
+	accumulated_mouse_del_y += spi_mouse_state_rx->dy;
+	accumulated_scroll_y += spi_mouse_state_rx->dz;
 
-	primary_button_state = spi_mouse_state_rx->buttons & 0x0F;
-	keypad_button_state = (spi_mouse_state_rx->buttons >> 8) & 0x0FFF;
+	current_primary_button_state = spi_mouse_state_rx->buttons & 0x0F;
+	current_keypad_button_state = (spi_mouse_state_rx->buttons >> 8) & 0x0FFF;
 
 	//spi_rx_buf[SPI_RX_BUF_SIZE] = 0;
 	//printf("Rcv:{%s}\r\n",spi_rx_buf);
 
-	printf("X:%d Y:%d Z:%d B:0x%x \r\n",mouse_x,mouse_y,scroll_y,primary_button_state);
+	printf("X:%d Y:%d Z:%d B:0x%x \r\n",accumulated_mouse_del_x,accumulated_mouse_del_y,accumulated_scroll_y,current_primary_button_state);
 }
 
 void spi_half_rx_complete(SPI_HandleTypeDef *hspi){
@@ -242,26 +242,26 @@ void timer10_period_elapsed(TIM_HandleTypeDef *htim){
 void timer9_period_elapsed(TIM_HandleTypeDef *htim){
 	tim9_count ++;
 
-	if (keypad_button_state != keypad_last_button_state){
+	if (current_keypad_button_state != previous_keypad_button_state){
 		absolute_mouse_hid_report.buttons = 0x01;
 		absolute_mouse_hid_report.mouse_x = 5000;
 		absolute_mouse_hid_report.mouse_y = 5000;
 		USBD_HID_SendReport (&hUsbDeviceFS, (uint8_t*) &absolute_mouse_hid_report, 6);
-		keypad_last_button_state = keypad_button_state;
+		previous_keypad_button_state = current_keypad_button_state;
 	}
 
-	if ((mouse_x != 0)||(mouse_y != 0)||(scroll_y !=0)||(primary_last_button_state != primary_button_state)){
-		mouse_hid_report.mouse_x = mouse_x;
-		mouse_hid_report.mouse_y = mouse_y;
-		mouse_hid_report.scroll_x = scroll_y;
+	if ((accumulated_mouse_del_x != 0)||(accumulated_mouse_del_y != 0)||(accumulated_scroll_y !=0)||(previous_primary_button_state != current_primary_button_state)){
+		mouse_hid_report.mouse_x = accumulated_mouse_del_x;
+		mouse_hid_report.mouse_y = accumulated_mouse_del_y;
+		mouse_hid_report.scroll_x = accumulated_scroll_y;
 		mouse_hid_report.scroll_y = 0;
-		mouse_hid_report.buttons = primary_button_state;
-		primary_last_button_state = primary_button_state;
+		mouse_hid_report.buttons = current_primary_button_state;
+		previous_primary_button_state = current_primary_button_state;
 		USBD_HID_SendReport (&hUsbDeviceFS, (uint8_t*) &mouse_hid_report, 8);
 
-		mouse_x = 0;
-		mouse_y = 0;
-		scroll_y = 0;
+		accumulated_mouse_del_x = 0;
+		accumulated_mouse_del_y = 0;
+		accumulated_scroll_y = 0;
 		return;
 	}
 }
@@ -517,7 +517,6 @@ static void MX_TIM9_Init(void)
   /* USER CODE BEGIN TIM9_Init 2 */
 
   /* USER CODE END TIM9_Init 2 */
-
 }
 
 /**
