@@ -5,7 +5,6 @@
  * License:
  */
 
-
 /**
  * Circular buffer data transmission scheme
  *
