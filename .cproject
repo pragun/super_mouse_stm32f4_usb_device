@@ -99,7 +99,7 @@
 						<entry flags="VALUE_WORKSPACE_PATH|RESOLVED" kind="sourcePath" name="Drivers"/>
 						<entry flags="VALUE_WORKSPACE_PATH|RESOLVED" kind="sourcePath" name="Middlewares"/>
 						<entry flags="VALUE_WORKSPACE_PATH|RESOLVED" kind="sourcePath" name="USB_DEVICE"/>
-						<entry excluding="TestRingBuffer" flags="VALUE_WORKSPACE_PATH" kind="sourcePath" name="glue_blocks"/>
+						<entry excluding="test_ring_buffer.cpp|TestRingBuffer" flags="VALUE_WORKSPACE_PATH" kind="sourcePath" name="glue_blocks"/>
 					</sourceEntries>
 				</configuration>
 			</storageModule>
