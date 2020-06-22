@@ -1,7 +1,0 @@
-/.ninja_deps
-/.ninja_log
-/CMakeCache.txt
-/TestRingBuffer
-/build.ninja
-/cmake_install.cmake
-/rules.ninja

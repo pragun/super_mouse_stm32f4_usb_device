@@ -70,8 +70,8 @@
  *  For new string of size < (max - e)
  *
  */
-#include <ring_buffer.cpp>
-#include <circular_buffers.hpp>
+#include "ring_buffer.cpp"
+#include "circular_buffers.hpp"
 #include <tuple>
 #include <cstring>
 
@@ -124,7 +124,6 @@ char* HIDContinuousBlockCircularBuffer::transfer_out(uint16_t n) {
 void HIDContinuousBlockCircularBuffer::mark_transferred(uint16_t n) {
 	ring_buf.mark_transferred< RingState::Sending, RingState::ClearToWrite >(n);
 }
-
 
 template class RingBuffer<char, uint16_t, uart_buffer_size, false, RingState, RingState::ClearToWrite, RingState::Queued, RingState::Sending>;
 template class RingBuffer<char, uint16_t, hid_buffer_size, true, RingState, RingState::ClearToWrite, RingState::Queued, RingState::Sending>;
