@@ -1,14 +1,16 @@
-/*
- * ring_buffer.cpp
- *
- *  Created on: Jun 15, 2020
- *      Author: Pragun Goyal
- *
+/**
+ * Title: Circular Buffer
+ * Author: Pragun Goyal, Jun 15, 2020
+ * Description: A simple circular buffer implementation specifically tailored
+ * to be used with memory constrained environments (like the STM32) without
+ * malloc (or where using malloc is not the best idea).
+ * License:
  */
+
 
 #include <cstring>
 #include <tuple>
-#include <algorithm>    // std::min
+#include <algorithm>    // for std::min
 
 template <typename storage_type, typename index_type, index_type max_buffer_size, bool enable_trimming, typename RingStateEnum, RingStateEnum... states>
 class RingBuffer

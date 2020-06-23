@@ -138,6 +138,7 @@ uint8_t rx_buf[UART_RX_BUF_SIZE];
 
 uint8_t spi_rx_buf[] = "Test Test Test Test Test ";
 UART_Tx_CircularBuffer uart2_tx_buf;
+HIDContinuousBlockCircularBuffer hid_report_buf;
 
 /* USER CODE END PV */
 
@@ -232,10 +233,21 @@ void timer10_period_elapsed(TIM_HandleTypeDef *htim){
 	uart_rx_dma_remaining_bytes = __HAL_DMA_GET_COUNTER(&hdma_usart2_rx);
 	process_transfer_uart_rx_buf(uart_rx_dma_remaining_bytes);
 
-	if ((uart2_tx_buf.length_of_ongoing_transmission() == 0) && (uart2_tx_buf.length_of_queue() > 0)){
-			auto [ tx_buf, tx_count ] = uart2_tx_buf.longest_possible_send();
+	if (HAL_DMA_GetState(&hdma_usart2_tx) == HAL_DMA_STATE_READY){
+		auto [ tx_buf, tx_count ] = uart2_tx_buf.longest_possible_send();
+		if(tx_count > 0){
 			HAL_UART_Transmit_DMA(&huart2,(uint8_t*) tx_buf, tx_count);
+		}
 	}
+
+	/*
+	if ((uart2_tx_buf.length_of_ongoing_transmission() == 0) && (uart2_tx_buf.length_of_queue() > 0)){
+		auto tt = HAL_DMA_GetState(&hdma_usart2_tx);
+		auto [ tx_buf, tx_count ] = uart2_tx_buf.longest_possible_send();
+		HAL_UART_Transmit_DMA(&huart2,(uint8_t*) tx_buf, tx_count);
+		asm("nop;");
+	} */
+
 }
 
 

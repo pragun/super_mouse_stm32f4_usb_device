@@ -7,6 +7,9 @@
 #include "circular_buffers.hpp"
 //#include "ring_buffer_instances.hpp"
 
+
+/**
+
 void test2() {
 	printf("\n\n\nTest1\n");
 	printf("\nTesting trim enabled\n");
@@ -46,6 +49,9 @@ void test2() {
 	b.mark_transferred(4); //	4 to Clear
 	b.print_state(); // = > Empty(4), Sending(Fr, 2), Queued(og, 2), Empty(8)
 }
+
+**/
+
 
 
 void test1() {
@@ -87,9 +93,63 @@ void test1() {
 	b.mark_transferred(4); //	4 to Clear
 	b.print_state(); // = > Empty(4), Sending(Fr, 2), Queued(og, 2), Empty(8)
 }
+
+void test3() {
+	printf("\n\n\nTest1\n");
+	printf("\nTesting trim enabled\n");
+	HIDContinuousBlockCircularBuffer b;
+	printf("B Pointer:%p\n", (void*)&b);
+
+	//Initial Buffer Condition
+	b.print_state(); //= > Empty
+
+	/* Note on notation:
+	RingState("a,string...",b),...
+	a is the length of the next string-segment
+	b is the total length of this RingState. So for example
+	Queued("4,Test,6,String", 14), Empty(2)
+	Would mean, that there are 14 bytes in queued, which includes
+	2 bytes for 4 -- which denotes the length of "Test", followed by
+	2 bytes for 6 -- which denotes the length of "String". 
+	Making it a total of 2+4+2+6 = 14.
+	*/
+
+	b.copy_in_report(4, "Test"); //Write Test
+	b.print_state(); // = > Queued("4,Test" , 6), Empty(10)
+
+	b.copy_in_report(6, "String"); //Write String
+	b.print_state(); // = > Queued("4,Test,6,String", 14), Empty(2)
+
+	{ auto [c1, s1] = b.transfer_out_next_report(); 
+	printf("Next report:%s, size:%d\n", c1, s1); }
+	b.print_state(); //	= > Sending("4,Test", 6), Queued("6,String", 8), Empty(2)
+
+	b.mark_transferred(4);
+	b.print_state(); //	= > Empty(6), Queued("6,String", 8), Empty(2)
+
+	b.copy_in_report(4, "Rock"); //Write Rock
+	b.print_state(); // = > Queued("4,Rock",6) , Queued("6,String", 8): Trimmed to 14
+
+	{ auto [c1, s1] = b.transfer_out_next_report();//	Put 4 to Sending
+	printf("Next report:%s, size:%d\n", c1, s1); } 
+	b.print_state(); // =>  // Queued("4,Rock", 6), Sending("6,String", 8)
+
+	b.copy_in_report(4, "Frog"); //	Write Frog
+	b.print_state(); // Should not work, as there is no empty space
+
+	b.mark_transferred(6);
+	b.print_state(); // = > Queued("4,Rock",6), Empty(8) 
+	
+	b.copy_in_report(4, "Frog"); //	Write Frog
+	b.print_state(); // = > Queued("4,Rock,4,Frog",12), Empty(4)  : Untrimmed to 16
+
+}
+
+
 int main(){
-	test2();
-	test1();
+	//test2();
+	//test1();
+	test3();
 }
 
 
