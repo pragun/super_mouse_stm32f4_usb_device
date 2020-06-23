@@ -364,8 +364,7 @@ int main(void)
   {
     /* USER CODE END WHILE */
 	  HAL_Delay(3000);
-	   pI =  USBD_HID_GetPollingInterval(&hUsbDeviceFS);
-
+	  pI =  USBD_HID_GetPollingInterval(&hUsbDeviceFS);
     /* USER CODE BEGIN 3 */
   }
   /* USER CODE END 3 */
