@@ -261,7 +261,6 @@ void timer9_period_elapsed(TIM_HandleTypeDef *htim){
 			absolute_mouse_hid_report->buttons = 0x01;
 			absolute_mouse_hid_report->mouse_x = 5000;
 			absolute_mouse_hid_report->mouse_y = 5000;
-			//USBD_HID_SendReport (&hUsbDeviceFS, (uint8_t*) &absolute_mouse_hid_report, 6);
 			previous_keypad_button_state = current_keypad_button_state;
 		}
 	}
@@ -276,8 +275,6 @@ void timer9_period_elapsed(TIM_HandleTypeDef *htim){
 			mouse_hid_report->scroll_y = 0;
 			mouse_hid_report->buttons = current_primary_button_state;
 			previous_primary_button_state = current_primary_button_state;
-			//USB_HID_Send_Next_Report(&hUsbDeviceFS);
-			//USBD_HID_SendReport (&hUsbDeviceFS, (uint8_t*) &absolute_mouse_hid_report, 6);
 			accumulated_mouse_del_x = 0;
 			accumulated_mouse_del_y = 0;
 			accumulated_scroll_y = 0;

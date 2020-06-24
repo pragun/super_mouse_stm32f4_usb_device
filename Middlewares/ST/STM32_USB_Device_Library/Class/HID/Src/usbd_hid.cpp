@@ -406,7 +406,7 @@ static uint8_t  USBD_HID_DataIn (USBD_HandleTypeDef *pdev,
   //printf("USBD_HID_DataIn \n");
   ((USBD_HID_HandleTypeDef *)pdev->pClassData)->state = HID_IDLE;
   hid_report_buf.last_send_complete();
-  //USB_HID_Send_Next_Report(pdev);
+  USB_HID_Send_Next_Report(pdev);
 }
 
 static uint8_t  USBD_HID_EP0_TxSent(USBD_HandleTypeDef *pdev)
