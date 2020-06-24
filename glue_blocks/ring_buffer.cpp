@@ -39,10 +39,13 @@ class RingBuffer
 	void trim_to_start_at_buffer_zero(){
 		//static_assert(trim_enabled, "Trimming needs to be enabled to use trim.");
 		// Check if the buffer roll-over boundary falls within this ring state
-		auto [lobe1,lobe2] = get_continuous_segment_sizes<state>();
+		//auto [lobe1,lobe2] = get_continuous_segment_sizes<state>();
 		if ((get_starting_index<state>() + get_num_elements<state>()) >= buffer_size){
 			set_num_elements<state>( get_num_elements<state>() - (buffer_size - get_starting_index<state>()) );
 			buffer_size = get_starting_index<state>();
+			for (uint16_t i=0; i < num_states; i++){
+				starting_index[i] = starting_index[i] % buffer_size;
+			}
 		}
 	}
 
@@ -142,7 +145,6 @@ class RingBuffer
 			set_starting_index<from_state>((get_starting_index<from_state>()+num) % buffer_size);
 			set_num_elements<from_state>( get_num_elements<from_state>() - num );
 			set_num_elements<to_state>( get_num_elements<to_state>() + num );
-
 			return num;
 		}else{
 			return 0;

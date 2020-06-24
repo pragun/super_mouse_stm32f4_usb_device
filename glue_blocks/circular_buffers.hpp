@@ -17,7 +17,7 @@ constexpr uint16_t uart_buffer_size = 16;
 constexpr uint16_t hid_buffer_size = 16;
 #else
 constexpr uint16_t uart_buffer_size = 512;
-constexpr uint16_t hid_buffer_size = 64;
+constexpr uint16_t hid_buffer_size = 16;
 #endif
 
 /*
@@ -39,6 +39,7 @@ private:
 	RingBuffer<char, uint16_t, hid_buffer_size, true, RingState, RingState::ClearToWrite, RingState::Queued, RingState::Sending> ring_buf;
 public:
 	uint16_t copy_in_report(uint16_t n, char* txt);
+	char* allocate_space_for_report(uint16_t n);
 	void print_state();
 	uint16_t mark_transferred(uint16_t n);
 	uint16_t last_send_complete();

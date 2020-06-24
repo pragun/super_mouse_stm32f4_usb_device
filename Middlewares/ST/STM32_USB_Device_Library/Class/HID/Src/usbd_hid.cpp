@@ -47,48 +47,7 @@
 #include "usbd_hid.h"
 #include "usbd_ctlreq.h"
 #include "usb_hid_descriptors.h"
-
-/** @addtogroup STM32_USB_DEVICE_LIBRARY
-  * @{
-  */
-
-
-/** @defgroup USBD_HID
-  * @brief usbd core module
-  * @{
-  */
-
-/** @defgroup USBD_HID_Private_TypesDefinitions
-  * @{
-  */
-/**
-  * @}
-  */
-
-
-/** @defgroup USBD_HID_Private_Defines
-  * @{
-  */
-
-/**
-  * @}
-  */
-
-
-/** @defgroup USBD_HID_Private_Macros
-  * @{
-  */
-/**
-  * @}
-  */
-
-
-
-
-/** @defgroup USBD_HID_Private_FunctionPrototypes
-  * @{
-  */
-
+#include "circular_buffers.hpp"
 
 static uint8_t  USBD_HID_Init (USBD_HandleTypeDef *pdev,
                                uint8_t cfgidx);
@@ -113,7 +72,9 @@ static uint8_t  USBD_HID_EP0_RxReady (USBD_HandleTypeDef *pdev);
 
 static uint8_t  USBD_HID_EP0_TxSent(USBD_HandleTypeDef *pdev);
 
-//extern HIDContinuousBlockCircularBuffer hid_report_buf;
+//uint8_t USB_HID_Send_Next_Report(USBD_HandleTypeDef *pdev);
+
+extern HIDContinuousBlockCircularBuffer hid_report_buf;
 
 USBD_ClassTypeDef  USBD_HID =
 {
@@ -330,10 +291,14 @@ uint8_t USBD_HID_SendReport     (USBD_HandleTypeDef  *pdev,
                         HID_EPIN_ADDR,
                         report,
                         len);
+      return USBD_OK;
     }
+    else{
+    	return USBD_BUSY;
+    }
+  }else{
+	  return USBD_FAIL;
   }
-  printf("USBD_HID_SentReport\n");
-  return USBD_OK;
 }
 
 /**
@@ -410,15 +375,38 @@ static uint8_t  *USBD_HID_GetOtherSpeedCfgDesc (uint16_t *length)
   * @param  epnum: endpoint index
   * @retval status
   */
+
+uint8_t USB_HID_Send_Next_Report(USBD_HandleTypeDef *pdev){
+	USBD_HID_HandleTypeDef *hhid = (USBD_HID_HandleTypeDef*)pdev->pClassData;
+	if ((pdev->dev_state == USBD_STATE_CONFIGURED ) && (hhid->state == HID_IDLE)){
+		auto [report, len] = hid_report_buf.transfer_out_next_report();
+		if (len > 0){
+			hhid->state = HID_BUSY;
+			USBD_LL_Transmit (pdev,
+					HID_EPIN_ADDR,
+					(uint8_t*) report,
+					len);
+		}
+		return USBD_OK;
+	}else{
+		if (pdev->dev_state != USBD_STATE_CONFIGURED ){
+			return USBD_FAIL;
+		}
+		if (hhid->state != HID_IDLE){
+			return USBD_BUSY;
+		}
+	}
+}
+
 static uint8_t  USBD_HID_DataIn (USBD_HandleTypeDef *pdev,
                               uint8_t epnum)
 {
-
   /* Ensure that the FIFO is empty before a new transfer, this condition could
   be caused by  a new transfer before the end of the previous transfer */
-  printf("USBD_HID_DataIn \n");
+  //printf("USBD_HID_DataIn \n");
   ((USBD_HID_HandleTypeDef *)pdev->pClassData)->state = HID_IDLE;
-  return USBD_OK;
+  hid_report_buf.last_send_complete();
+  //USB_HID_Send_Next_Report(pdev);
 }
 
 static uint8_t  USBD_HID_EP0_TxSent(USBD_HandleTypeDef *pdev)

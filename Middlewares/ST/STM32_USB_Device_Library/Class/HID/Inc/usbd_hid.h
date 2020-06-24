@@ -126,6 +126,8 @@ uint8_t USBD_HID_SendReport (USBD_HandleTypeDef *pdev,
                                  uint8_t *report,
                                  uint16_t len);
 
+uint8_t USB_HID_Send_Next_Report(USBD_HandleTypeDef *pdev);
+
 uint32_t USBD_HID_GetPollingInterval (USBD_HandleTypeDef *pdev);
 
 /**

@@ -49,13 +49,21 @@ uint16_t UART_Tx_CircularBuffer::length_of_queue(){
 
 /* --- */
 uint16_t HIDContinuousBlockCircularBuffer::copy_in_report(uint16_t n, char* txt) {
-	char* write_buf = ring_buf.get_transfer_buffer<RingState::ClearToWrite, RingState::Queued, true>(n+sizeof(n));
+	char* write_buf = allocate_space_for_report(n);
 	if (write_buf != nullptr) {
-		std::memcpy(write_buf, &n, sizeof(n));
-		std::memcpy(&write_buf[sizeof(n)], txt, n);
+		std::memcpy(write_buf, txt, n);
 		return n;
 	}
 	return 0;
+}
+
+char* HIDContinuousBlockCircularBuffer::allocate_space_for_report(uint16_t n){
+	char* write_buf = ring_buf.get_transfer_buffer<RingState::ClearToWrite, RingState::Queued, true>(n+sizeof(n));
+	if (write_buf != nullptr) {
+		std::memcpy(write_buf, &n, sizeof(n));
+		return &write_buf[sizeof(n)];
+	}
+	return nullptr;
 }
 
 void HIDContinuousBlockCircularBuffer::print_state() {

@@ -118,8 +118,8 @@ typedef struct
 }
 Absolute_Mouse_HID_Report_TypeDef;
 
-Mouse_HID_Report_TypeDef mouse_hid_report;
-Absolute_Mouse_HID_Report_TypeDef absolute_mouse_hid_report;
+Mouse_HID_Report_TypeDef* mouse_hid_report;
+Absolute_Mouse_HID_Report_TypeDef* absolute_mouse_hid_report;
 
 #pragma pack(1)
 typedef struct
@@ -255,27 +255,37 @@ void timer9_period_elapsed(TIM_HandleTypeDef *htim){
 	tim9_count ++;
 
 	if (current_keypad_button_state != previous_keypad_button_state){
-		absolute_mouse_hid_report.buttons = 0x01;
-		absolute_mouse_hid_report.mouse_x = 5000;
-		absolute_mouse_hid_report.mouse_y = 5000;
-		USBD_HID_SendReport (&hUsbDeviceFS, (uint8_t*) &absolute_mouse_hid_report, 6);
-		previous_keypad_button_state = current_keypad_button_state;
+		absolute_mouse_hid_report = (Absolute_Mouse_HID_Report_TypeDef*) hid_report_buf.allocate_space_for_report((uint16_t) sizeof(Absolute_Mouse_HID_Report_TypeDef));
+		if (absolute_mouse_hid_report != nullptr){
+			absolute_mouse_hid_report->report_id = 0x03;
+			absolute_mouse_hid_report->buttons = 0x01;
+			absolute_mouse_hid_report->mouse_x = 5000;
+			absolute_mouse_hid_report->mouse_y = 5000;
+			//USBD_HID_SendReport (&hUsbDeviceFS, (uint8_t*) &absolute_mouse_hid_report, 6);
+			previous_keypad_button_state = current_keypad_button_state;
+		}
 	}
 
 	if ((accumulated_mouse_del_x != 0)||(accumulated_mouse_del_y != 0)||(accumulated_scroll_y !=0)||(previous_primary_button_state != current_primary_button_state)){
-		mouse_hid_report.mouse_x = accumulated_mouse_del_x;
-		mouse_hid_report.mouse_y = accumulated_mouse_del_y;
-		mouse_hid_report.scroll_x = accumulated_scroll_y;
-		mouse_hid_report.scroll_y = 0;
-		mouse_hid_report.buttons = current_primary_button_state;
-		previous_primary_button_state = current_primary_button_state;
-		USBD_HID_SendReport (&hUsbDeviceFS, (uint8_t*) &mouse_hid_report, 8);
-
-		accumulated_mouse_del_x = 0;
-		accumulated_mouse_del_y = 0;
-		accumulated_scroll_y = 0;
-		return;
+		mouse_hid_report = (Mouse_HID_Report_TypeDef*) hid_report_buf.allocate_space_for_report((uint16_t) sizeof(Mouse_HID_Report_TypeDef));
+		if (mouse_hid_report != nullptr){
+			mouse_hid_report->report_id = 0x01;
+			mouse_hid_report->mouse_x = accumulated_mouse_del_x;
+			mouse_hid_report->mouse_y = accumulated_mouse_del_y;
+			mouse_hid_report->scroll_x = accumulated_scroll_y;
+			mouse_hid_report->scroll_y = 0;
+			mouse_hid_report->buttons = current_primary_button_state;
+			previous_primary_button_state = current_primary_button_state;
+			//USB_HID_Send_Next_Report(&hUsbDeviceFS);
+			//USBD_HID_SendReport (&hUsbDeviceFS, (uint8_t*) &absolute_mouse_hid_report, 6);
+			accumulated_mouse_del_x = 0;
+			accumulated_mouse_del_y = 0;
+			accumulated_scroll_y = 0;
+			return;
+		}
 	}
+
+	USB_HID_Send_Next_Report(&hUsbDeviceFS);
 }
 
 
