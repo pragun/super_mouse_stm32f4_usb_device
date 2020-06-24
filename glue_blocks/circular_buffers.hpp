@@ -17,7 +17,7 @@ constexpr uint16_t uart_buffer_size = 16;
 constexpr uint16_t hid_buffer_size = 16;
 #else
 constexpr uint16_t uart_buffer_size = 512;
-constexpr uint16_t hid_buffer_size = 16;
+constexpr uint16_t hid_buffer_size = 64;
 #endif
 
 /*
