@@ -19,11 +19,14 @@
 /* USER CODE END Header */
 
 /* Includes ------------------------------------------------------------------*/
-#include <circular_buffers.hpp>
+#include <cstdio>
+
+#include "circular_buffers.hpp"
 #include "main.h"
 #include "usb_device.h"
 #include "usbd_hid.h"
-#include <cstdio>
+#include "mouse_event_handler.hpp"
+
 
 /* Private includes ----------------------------------------------------------*/
 /* USER CODE BEGIN Includes */
@@ -98,26 +101,6 @@ int16_t del_x = 0;
 int16_t del_y = 0;
 int8_t del_z = 0;
 
-typedef struct
-{
-    uint8_t report_id = 1;
-	uint8_t buttons;
-    int16_t mouse_x;
-    int16_t mouse_y;
-    int8_t scroll_y;
-    int8_t scroll_x;
-}
-Mouse_HID_Report_TypeDef;
-
-typedef struct
-{
-    uint8_t report_id = 3;
-	uint8_t buttons;
-    uint16_t mouse_x;
-    uint16_t mouse_y;
-}
-Absolute_Mouse_HID_Report_TypeDef;
-
 Mouse_HID_Report_TypeDef* mouse_hid_report;
 Absolute_Mouse_HID_Report_TypeDef* absolute_mouse_hid_report;
 
@@ -138,7 +121,9 @@ uint8_t rx_buf[UART_RX_BUF_SIZE];
 
 uint8_t spi_rx_buf[] = "Test Test Test Test Test ";
 UART_Tx_CircularBuffer uart2_tx_buf;
-HIDContinuousBlockCircularBuffer hid_report_buf;
+
+//const char memtest[]  = "Test";
+//const char memtest[] = "Test Test Test Test Test Test Test Test Test Test Test Test Test Test Test Test Test Test Test Test Test Test Test Test Test Test Test Test Test Test Test Test Test Test Test Test Test Test Test Test Test Test Test Test Test Test Test Test Test Test Test Test Test Test Test Test Test Test Test Test Test Test Test Test Test Test Test Test Test Test Test Test Test Test Test Test Test Test Test Test Test Test Test Test Test Test Test Test Test Test Test Test Test Test Test Test Test Test Test Test Test Test Test Test Test Test Test Test Test Test Test Test Test Test Test Test Test Test Test Test Test Test Test Test Test Test Test Test Test Test Test Test Test Test Test Test Test Test Test Test Test Test Test Test Test Test ";
 
 /* USER CODE END PV */
 
@@ -148,6 +133,7 @@ static void MX_GPIO_Init(void);
 static void MX_DMA_Init(void);
 static void MX_SPI1_Init(void);
 static void MX_TIM9_Init(void);
+static void MX_TIM5_Init(void);
 static void MX_TIM10_Init(void);
 static void MX_TIM11_Init(void);
 static void MX_USART2_UART_Init(void);
@@ -157,6 +143,7 @@ static void MX_USART2_UART_Init(void);
 
 /* Private user code ---------------------------------------------------------*/
 /* USER CODE BEGIN 0 */
+
 //extern "C" uint8_t PrintHexBuf(uint8_t *buff, uint8_t len);
 uint8_t PrintHexBuf(uint8_t *buff, uint8_t len){
 	for(uint8_t i = 0; i<len; i++){
@@ -169,10 +156,26 @@ uint8_t PrintHexBuf(uint8_t *buff, uint8_t len){
 	return 0;
 }
 
+void start_keypress_timer(){
+	htim5.Instance->CNT = 0;
+	HAL_TIM_Base_Start_IT(&htim5);
+}
+
+void stop_keypress_timer(){
+	HAL_TIM_Base_Stop_IT(&htim5);
+}
+
+uint32_t read_keypress_time_ms(){
+	uint32_t cnt = __HAL_TIM_GetCounter(&htim5);
+	return cnt/10;
+}
+
+
+MouseEventHandler mouse_event_handler(&stop_keypress_timer, &start_keypress_timer, &read_keypress_time_ms);
+
 void HAL_GPIO_EXTI_Callback(uint16_t GPIO_Pin)
 {
 	gpio_pa8_interrupt_count ++ ;
-	//HAL_SPI_Receive_DMA(&hspi1, spi_rx_buf, 9);
 	printf("GPIO Interrupt received.\r\n");
 }
 
@@ -183,19 +186,11 @@ void spi_rx_complete(SPI_HandleTypeDef *hspi){
 	PrintHexBuf(spi_rx_buf,9);
 
 	spi_mouse_state_rx = (SPI_MMO_Mouse_State_TypeDef*) spi_rx_buf;
-
-	accumulated_mouse_del_x += spi_mouse_state_rx->dx;
-	accumulated_mouse_del_y += spi_mouse_state_rx->dy;
-	accumulated_scroll_y += spi_mouse_state_rx->dz;
-
-	current_primary_button_state = spi_mouse_state_rx->buttons & 0x0F;
-	current_keypad_button_state = (spi_mouse_state_rx->buttons >> 8) & 0x0FFF;
-
-	//spi_rx_buf[SPI_RX_BUF_SIZE] = 0;
-	//printf("Rcv:{%s}\r\n",spi_rx_buf);
+	mouse_event_handler.update_state(spi_mouse_state_rx->dx, spi_mouse_state_rx->dy, spi_mouse_state_rx->dz, spi_mouse_state_rx->buttons);
 
 	printf("X:%d Y:%d Z:%d B:0x%x \r\n",accumulated_mouse_del_x,accumulated_mouse_del_y,accumulated_scroll_y,current_primary_button_state);
 }
+
 
 void spi_half_rx_complete(SPI_HandleTypeDef *hspi){
 	spi_half_rx_count ++ ;
@@ -210,10 +205,6 @@ void spi_rx_error(SPI_HandleTypeDef *hspi){
 void timer11_period_elapsed(TIM_HandleTypeDef *htim){
 	tim11_count ++;
 	printf("Client alive msg.. %d\r\n",tim11_count);
-
-	//HAL_SPI_Receive_DMA(&hspi1, spi_rx_buf, SPI_RX_BUF_SIZE);
-	//HAL_SPI_Receive_IT(&hspi1, spi_rx_buf, SPI_RX_BUF_SIZE);
-	//CDC_Transmit_FS((uint8_t *) "Hello world \r\n",14);
 }
 
 void process_transfer_uart_rx_buf(uint8_t remaining_bytes){
@@ -253,36 +244,7 @@ void timer10_period_elapsed(TIM_HandleTypeDef *htim){
 
 void timer9_period_elapsed(TIM_HandleTypeDef *htim){
 	tim9_count ++;
-
-	if (current_keypad_button_state != previous_keypad_button_state){
-		absolute_mouse_hid_report = (Absolute_Mouse_HID_Report_TypeDef*) hid_report_buf.allocate_space_for_report((uint16_t) sizeof(Absolute_Mouse_HID_Report_TypeDef));
-		if (absolute_mouse_hid_report != nullptr){
-			absolute_mouse_hid_report->report_id = 0x03;
-			absolute_mouse_hid_report->buttons = 0x01;
-			absolute_mouse_hid_report->mouse_x = 5000;
-			absolute_mouse_hid_report->mouse_y = 5000;
-			previous_keypad_button_state = current_keypad_button_state;
-		}
-	}
-
-	if ((accumulated_mouse_del_x != 0)||(accumulated_mouse_del_y != 0)||(accumulated_scroll_y !=0)||(previous_primary_button_state != current_primary_button_state)){
-		mouse_hid_report = (Mouse_HID_Report_TypeDef*) hid_report_buf.allocate_space_for_report((uint16_t) sizeof(Mouse_HID_Report_TypeDef));
-		if (mouse_hid_report != nullptr){
-			mouse_hid_report->report_id = 0x01;
-			mouse_hid_report->mouse_x = accumulated_mouse_del_x;
-			mouse_hid_report->mouse_y = accumulated_mouse_del_y;
-			mouse_hid_report->scroll_x = accumulated_scroll_y;
-			mouse_hid_report->scroll_y = 0;
-			mouse_hid_report->buttons = current_primary_button_state;
-			previous_primary_button_state = current_primary_button_state;
-			accumulated_mouse_del_x = 0;
-			accumulated_mouse_del_y = 0;
-			accumulated_scroll_y = 0;
-			return;
-		}
-	}
-
-	USB_HID_Send_Next_Report(&hUsbDeviceFS);
+	mouse_event_handler.hid_poll_interval_timer_callback();
 }
 
 
@@ -339,6 +301,7 @@ int main(void)
   MX_DMA_Init();
   MX_SPI1_Init();
   MX_TIM9_Init();
+  MX_TIM5_Init();
   MX_TIM10_Init();
   MX_TIM11_Init();
   MX_USART2_UART_Init();
@@ -371,7 +334,11 @@ int main(void)
   {
     /* USER CODE END WHILE */
 	  HAL_Delay(3000);
-	  pI =  USBD_HID_GetPollingInterval(&hUsbDeviceFS);
+	  ///pI =  USBD_HID_GetPollingInterval(&hUsbDeviceFS);
+	  if (memtest[pI] == 1){
+		  HAL_Delay(1);
+	  }
+	  pI ++;
     /* USER CODE BEGIN 3 */
   }
   /* USER CODE END 3 */
@@ -476,7 +443,7 @@ static void MX_TIM5_Init(void)
   htim5.Instance = TIM5;
   htim5.Init.Prescaler = 8400;
   htim5.Init.CounterMode = TIM_COUNTERMODE_UP;
-  htim5.Init.Period = 0;
+  htim5.Init.Period = 0xFFFFFFFF;
   htim5.Init.ClockDivision = TIM_CLOCKDIVISION_DIV1;
   htim5.Init.AutoReloadPreload = TIM_AUTORELOAD_PRELOAD_DISABLE;
   if (HAL_TIM_Base_Init(&htim5) != HAL_OK)
