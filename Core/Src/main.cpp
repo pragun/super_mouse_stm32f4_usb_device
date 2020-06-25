@@ -334,10 +334,7 @@ int main(void)
   {
     /* USER CODE END WHILE */
 	  HAL_Delay(3000);
-	  ///pI =  USBD_HID_GetPollingInterval(&hUsbDeviceFS);
-	  if (memtest[pI] == 1){
-		  HAL_Delay(1);
-	  }
+	  pI =  USBD_HID_GetPollingInterval(&hUsbDeviceFS);
 	  pI ++;
     /* USER CODE BEGIN 3 */
   }
