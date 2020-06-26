@@ -1,5 +1,5 @@
 /*
- * keypad_event_handler.cpp
+ * mouse_event_handler.cpp
  *
  *  Created on: Jun 13, 2020
  *      Author: Pragun Goyal
@@ -40,50 +40,52 @@ if (absolute_mouse_hid_report != nullptr){
 }
 */
 
-Mouse_HID_Report_TypeDef* MouseEventHandler::create_or_retreive_mouse_hid_report(){
-	if(mouse_hid_report == nullptr){
-		mouse_hid_report = (Mouse_HID_Report_TypeDef*) hid_report_buf.allocate_space_for_report((uint16_t) sizeof(Mouse_HID_Report_TypeDef));
-		if (mouse_hid_report != nullptr){
-			mouse_hid_report->report_id = 0x01;
+Mouse_HID_Report_TypeDef* MouseEventHandler::create_or_retreive_mouse_hid_report(Mouse_HID_Report_TypeDef* report){
+	if(report == nullptr){
+		report = (Mouse_HID_Report_TypeDef*) hid_report_buf.allocate_space_for_report((uint16_t) sizeof(Mouse_HID_Report_TypeDef));
+		if (report != nullptr){
+			report->report_id = 0x01;
 
 			//As the button state is always reported as it is
 			//in other words, if there is a mouse_hid_report, it has the button state in it
-			mouse_hid_report->buttons = current_primary_button_state;
+			report->buttons = current_primary_button_state;
 			previous_primary_button_state = current_primary_button_state;
 
-			mouse_hid_report->mouse_x = 0;
-			mouse_hid_report->mouse_y = 0;
-			mouse_hid_report->scroll_y = 0;
-			mouse_hid_report->scroll_y = 0;
+			report->mouse_x = 0;
+			report->mouse_y = 0;
+			report->scroll_y = 0;
+			report->scroll_y = 0;
 		}
 	}
-	return mouse_hid_report;
+	return report;
 };
 
-void MouseEventHandler::report_mouse_movement(){
-	if (create_or_retreive_mouse_hid_report() != nullptr){
-		mouse_hid_report->mouse_x = accumulated_mouse_del_x;
-		mouse_hid_report->mouse_y = accumulated_mouse_del_y;
-		mouse_hid_report->scroll_x = accumulated_scroll_y;
-		mouse_hid_report->scroll_y = 0;
+Mouse_HID_Report_TypeDef* MouseEventHandler::report_mouse_movement(Mouse_HID_Report_TypeDef* report){
+	report = create_or_retreive_mouse_hid_report(report);
+	if(report != nullptr){
+		report->mouse_x = accumulated_mouse_del_x;
+		report->mouse_y = accumulated_mouse_del_y;
+		report->scroll_x = accumulated_scroll_y;
+		report->scroll_y = 0;
 
 		accumulated_mouse_del_x = 0;
 		accumulated_mouse_del_y = 0;
 		accumulated_scroll_y = 0;
 	}
+	return report;
 }
 
-void MouseEventHandler::report_mouse_button_state(){
-	if (create_or_retreive_mouse_hid_report() != nullptr){
-		// No need to do anything else, if a mouse hid report is created
-		// it already includes button state
-	}
+inline Mouse_HID_Report_TypeDef* MouseEventHandler::report_mouse_button_state(Mouse_HID_Report_TypeDef* report){
+	// No need to do anything else, if a mouse hid report is created
+	// it already includes button state
+	return create_or_retreive_mouse_hid_report(report);
 }
 
 void MouseEventHandler::hid_poll_interval_timer_callback(){
+	Mouse_HID_Report_TypeDef* mouse_hid_report = nullptr;
 	if (previous_primary_button_state != current_primary_button_state){
 		//If there is a change in the button_state, the following will make sure that a Mouse HID report is included
-		report_mouse_button_state();
+		mouse_hid_report = report_mouse_button_state(mouse_hid_report);
 	}
 
 	if (current_keypad_state != previous_keypad_state){ //There's been a change on the keypad
@@ -102,7 +104,7 @@ void MouseEventHandler::hid_poll_interval_timer_callback(){
 		}
 		else if (previous_keypad_state == 0){ // A new key has been pressed
 			// Report all un-reported mouse delx,dely,delz
-			report_mouse_movement();
+			report_mouse_movement(mouse_hid_report);
 			start_timer();
 			tracking_pressed_key = __builtin_ffs (current_keypad_state);
 			printf("Key Pressed Index:%d\n",tracking_pressed_key);
@@ -116,10 +118,11 @@ void MouseEventHandler::hid_poll_interval_timer_callback(){
 
 	if ((accumulated_mouse_del_x != 0)||(accumulated_mouse_del_y != 0)||(accumulated_scroll_y !=0)){ //Some movement is been accumulated on the mouse
 		if (tracking_pressed_key == 0){ //No keypad key is pressed, this means that the movement can be reported as a regular mouse HID report
-			report_mouse_movement();
+			report_mouse_movement(mouse_hid_report);
 		}
 	}
 
 	mouse_hid_report = nullptr;
 	USB_HID_Send_Next_Report(&hUsbDeviceFS);
 }
+

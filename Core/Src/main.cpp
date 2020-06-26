@@ -231,13 +231,12 @@ void timer10_period_elapsed(TIM_HandleTypeDef *htim){
 		}
 	}
 
-	/*
-	if ((uart2_tx_buf.length_of_ongoing_transmission() == 0) && (uart2_tx_buf.length_of_queue() > 0)){
+	/*if ((uart2_tx_buf.length_of_ongoing_transmission() == 0) && (uart2_tx_buf.length_of_queue() > 0)){
 		auto tt = HAL_DMA_GetState(&hdma_usart2_tx);
 		auto [ tx_buf, tx_count ] = uart2_tx_buf.longest_possible_send();
 		HAL_UART_Transmit_DMA(&huart2,(uint8_t*) tx_buf, tx_count);
 		asm("nop;");
-	} */
+	}*/
 
 }
 
@@ -312,7 +311,7 @@ int main(void)
   HAL_TIM_RegisterCallback(&htim10,HAL_TIM_PERIOD_ELAPSED_CB_ID, timer10_period_elapsed);
   HAL_TIM_RegisterCallback(&htim9,HAL_TIM_PERIOD_ELAPSED_CB_ID, timer9_period_elapsed);
 
-//  HAL_UART_RegisterCallback(&huart2, HAL_UART_TX_COMPLETE_CB_ID, uart_transfer_completed);
+  //HAL_UART_RegisterCallback(&huart2, HAL_UART_TX_COMPLETE_CB_ID, uart_transfer_completed);
   HAL_UART_RegisterCallback(&huart2, HAL_UART_RX_COMPLETE_CB_ID, uart_rx_complete);
   HAL_UART_RegisterCallback(&huart2, HAL_UART_TX_COMPLETE_CB_ID, uart_tx_complete);
   HAL_SPI_RegisterCallback(&hspi1, HAL_SPI_RX_COMPLETE_CB_ID, spi_rx_complete);

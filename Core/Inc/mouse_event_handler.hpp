@@ -24,12 +24,14 @@ private:
 	uint16_t current_keypad_state = 0;
 	uint16_t previous_keypad_state = 0;
 
-	Mouse_HID_Report_TypeDef* mouse_hid_report;
+	//Mouse_HID_Report_TypeDef* mouse_hid_report;
 	Absolute_Mouse_HID_Report_TypeDef* absolute_mouse_hid_report;
 
-	Mouse_HID_Report_TypeDef* create_or_retreive_mouse_hid_report();
-	void report_mouse_movement();
-	void report_mouse_button_state();
+	Mouse_HID_Report_TypeDef* create_or_retreive_mouse_hid_report(Mouse_HID_Report_TypeDef*);
+	Mouse_HID_Report_TypeDef* report_mouse_movement(Mouse_HID_Report_TypeDef*);
+	Mouse_HID_Report_TypeDef* report_mouse_button_state(Mouse_HID_Report_TypeDef*);
+
+	void report_altered_mouse_movement(Mouse_HID_Report_TypeDef*,void* parameters);
 
 public:
 	void (*start_timer)();
