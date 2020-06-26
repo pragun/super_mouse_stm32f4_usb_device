@@ -12,7 +12,7 @@
 typedef struct
 {
     uint8_t report_id = 1;
-	uint8_t buttons;
+	uint8_t buttons : 3;
     int16_t mouse_x;
     int16_t mouse_y;
     int8_t scroll_y;
@@ -23,7 +23,7 @@ Mouse_HID_Report_TypeDef;
 typedef struct
 {
     uint8_t report_id = 3;
-	uint8_t buttons;
+	uint8_t buttons : 1;
     uint16_t mouse_x;
     uint16_t mouse_y;
 }

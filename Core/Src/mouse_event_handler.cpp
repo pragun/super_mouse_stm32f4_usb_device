@@ -40,7 +40,7 @@ if (absolute_mouse_hid_report != nullptr){
 }
 */
 
-Mouse_HID_Report_TypeDef* MouseEventHandler::create_or_retreive_mouse_hid_report(Mouse_HID_Report_TypeDef* report){
+Mouse_HID_Report_TypeDef* MouseEventHandler::create_or_retreive_default_mouse_hid_report(Mouse_HID_Report_TypeDef* report){
 	if(report == nullptr){
 		report = (Mouse_HID_Report_TypeDef*) hid_report_buf.allocate_space_for_report((uint16_t) sizeof(Mouse_HID_Report_TypeDef));
 		if (report != nullptr){
@@ -60,8 +60,10 @@ Mouse_HID_Report_TypeDef* MouseEventHandler::create_or_retreive_mouse_hid_report
 	return report;
 };
 
+
+
 Mouse_HID_Report_TypeDef* MouseEventHandler::report_mouse_movement(Mouse_HID_Report_TypeDef* report){
-	report = create_or_retreive_mouse_hid_report(report);
+	report = create_or_retreive_default_mouse_hid_report(report);
 	if(report != nullptr){
 		report->mouse_x = accumulated_mouse_del_x;
 		report->mouse_y = accumulated_mouse_del_y;
@@ -78,7 +80,7 @@ Mouse_HID_Report_TypeDef* MouseEventHandler::report_mouse_movement(Mouse_HID_Rep
 inline Mouse_HID_Report_TypeDef* MouseEventHandler::report_mouse_button_state(Mouse_HID_Report_TypeDef* report){
 	// No need to do anything else, if a mouse hid report is created
 	// it already includes button state
-	return create_or_retreive_mouse_hid_report(report);
+	return create_or_retreive_default_mouse_hid_report(report);
 }
 
 void MouseEventHandler::hid_poll_interval_timer_callback(){
