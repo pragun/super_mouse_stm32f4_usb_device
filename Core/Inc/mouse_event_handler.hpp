@@ -34,6 +34,7 @@ private:
 	void report_altered_mouse_movement(void* report,void* parameters);
 	void report_absolute_mouse(void* report, void* parameters);
 	void report_keyboard_key_press_release(void* report, void* parameters);
+	void report_modulo_movement_as_keys_press_release(void* report, void* parameters);
 
 public:
 	void (*start_timer)();

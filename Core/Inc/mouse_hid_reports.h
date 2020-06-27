@@ -29,4 +29,12 @@ typedef struct
 }
 Absolute_Mouse_HID_Report_TypeDef;
 
+typedef struct
+{
+	uint8_t report_id = 2;
+	uint8_t modifier_keys;
+	uint8_t key_press[3];
+}
+Keyboard_Report_TypeDef;
+
 #endif /* INC_MOUSE_HID_REPORTS_H_ */
