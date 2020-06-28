@@ -62,11 +62,11 @@ _Min_Stack_Size = 0x400 ;	/* required amount of stack */
 MEMORY
 {
   RAM	(xrw)	: ORIGIN = 0x20000000,	LENGTH = 64K
-  FLASH	(rx)	: ORIGIN = 0x8020000,	LENGTH = 128K
+  FLASH	(rx)	: ORIGIN = 0x08000000,	LENGTH = 256K
 }
 
 /** The original FlASH configuration is as follows:
-	FLASH	(rx)	: ORIGIN = 0x8000000,	LENGTH = 256K 
+	FLASH	(rx)	: ORIGIN = 0x8000000,	LENGTH = 256K
 	It was changed to
 	FLASH	(rx)	: ORIGIN = 0x8020000,	LENGTH = 128K
 	so that the first 4[16k] sectors, and the 5th 64k sector could be
@@ -82,9 +82,31 @@ SECTIONS
   {
     . = ALIGN(4);
     KEEP(*(.isr_vector)) /* Startup code */
+    _eisr_vector = .;
     . = ALIGN(4);
   } >FLASH
-
+  
+  .bootloader :
+  {
+    . = . + ( 0x4000 - SIZEOF(.isr_vector));
+    _ebootloader = .;
+  } >FLASH
+    
+ .config_sector1 : {
+  	. = ALIGN(4); 	
+    *(.config_sector1)
+    . = . + 0x4000 - 4;
+    . = ALIGN(4); 
+ } >FLASH
+  
+  
+ .config_sector2 : { 
+    . = ALIGN(4);
+    *(.config_sector2)
+    . = . + 0x4000 - 4; 
+    . = ALIGN(4);
+ } >FLASH
+  
   /* The program code and other data into "FLASH" Rom type memory */
   .text :
   {

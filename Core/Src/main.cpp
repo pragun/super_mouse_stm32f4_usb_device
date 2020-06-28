@@ -125,6 +125,9 @@ UART_Tx_CircularBuffer uart2_tx_buf;
 //const char memtest[]  = "Test";
 //const char memtest[] = "Test Test Test Test Test Test Test Test Test Test Test Test Test Test Test Test Test Test Test Test Test Test Test Test Test Test Test Test Test Test Test Test Test Test Test Test Test Test Test Test Test Test Test Test Test Test Test Test Test Test Test Test Test Test Test Test Test Test Test Test Test Test Test Test Test Test Test Test Test Test Test Test Test Test Test Test Test Test Test Test Test Test Test Test Test Test Test Test Test Test Test Test Test Test Test Test Test Test Test Test Test Test Test Test Test Test Test Test Test Test Test Test Test Test Test Test Test Test Test Test Test Test Test Test Test Test Test Test Test Test Test Test Test Test Test Test Test Test Test Test Test Test Test Test Test Test ";
 
+volatile const uint32_t user_config_sector1 __attribute__ ((section(".config_sector1"))) = 0x1FFF ;
+volatile const uint32_t user_config_sector2 __attribute__ ((section(".config_sector2"))) = 0x2FFF ;
+
 /* USER CODE END PV */
 
 /* Private function prototypes -----------------------------------------------*/
@@ -272,6 +275,10 @@ int _write(int file, char *ptr, int len)
   * @retval int
   */
 
+void HAL_FLASH_EndOfOperationCallback(uint32_t ReturnValue){
+	printf("Finished write operation:%d\n",ReturnValue);
+}
+
 int main(void)
 {
   /* USER CODE BEGIN 1 */
@@ -328,13 +335,34 @@ int main(void)
 
   /* Infinite loop */
   /* USER CODE BEGIN WHILE */
+
   uint32_t pI = 0;
+  uint64_t Data = 0x00000000FFFFFFFF;
+  uint8_t i = 0;
+
+
+
   while (1)
   {
-    /* USER CODE END WHILE */
-	  HAL_Delay(3000);
+	  /* USER CODE END WHILE */
+	  HAL_StatusTypeDef a = HAL_FLASH_Unlock();
+	  __HAL_FLASH_CLEAR_FLAG(FLASH_FLAG_EOP | FLASH_FLAG_OPERR | FLASH_FLAG_WRPERR | FLASH_FLAG_PGAERR | FLASH_FLAG_PGSERR | FLASH_FLAG_PGPERR);
+
+	  const volatile uint32_t *userConfig = &user_config_sector1;
+
+	  HAL_StatusTypeDef b = HAL_FLASH_Program(FLASH_TYPEPROGRAM_BYTE, (uint32_t) userConfig, Data);
+
+	  Data = Data & ~(uint64_t)(0x1<<i);
+	  //HAL_Delay(3000);
+
+	  HAL_FLASH_Lock();
+
+	  HAL_Delay(1000);
+
 	  pI =  USBD_HID_GetPollingInterval(&hUsbDeviceFS);
 	  pI ++;
+	  i ++;
+	  i = i % 16;
     /* USER CODE BEGIN 3 */
   }
   /* USER CODE END 3 */
