@@ -125,7 +125,7 @@ UART_Tx_CircularBuffer uart2_tx_buf;
 //const char memtest[]  = "Test";
 //const char memtest[] = "Test Test Test Test Test Test Test Test Test Test Test Test Test Test Test Test Test Test Test Test Test Test Test Test Test Test Test Test Test Test Test Test Test Test Test Test Test Test Test Test Test Test Test Test Test Test Test Test Test Test Test Test Test Test Test Test Test Test Test Test Test Test Test Test Test Test Test Test Test Test Test Test Test Test Test Test Test Test Test Test Test Test Test Test Test Test Test Test Test Test Test Test Test Test Test Test Test Test Test Test Test Test Test Test Test Test Test Test Test Test Test Test Test Test Test Test Test Test Test Test Test Test Test Test Test Test Test Test Test Test Test Test Test Test Test Test Test Test Test Test Test Test Test Test Test Test ";
 
-volatile const uint32_t user_config_sector1 __attribute__ ((section(".config_sector1"))) = 0x1FFF ;
+volatile const uint32_t user_config_sector1 __attribute__ ((section(".config_sector1"))) = 0xFFFFFFFF ;
 volatile const uint32_t user_config_sector2 __attribute__ ((section(".config_sector2"))) = 0x2FFF ;
 
 /* USER CODE END PV */
@@ -275,8 +275,14 @@ int _write(int file, char *ptr, int len)
   * @retval int
   */
 
+void Enable_Flash_Interrupts_NVIC(){
+	  HAL_NVIC_SetPriority(FLASH_IRQn, 0, 0);
+	  HAL_NVIC_EnableIRQ(FLASH_IRQn);
+}
+
 void HAL_FLASH_EndOfOperationCallback(uint32_t ReturnValue){
-	printf("Finished write operation:%d\n",ReturnValue);
+	printf("Finished write operation, return value:%x\n",ReturnValue);
+	printf("Flash Value:%x\n",user_config_sector1);
 }
 
 int main(void)
@@ -333,6 +339,10 @@ int main(void)
   HAL_UART_Receive_DMA(&huart2, rx_buf, UART_RX_BUF_SIZE);
   HAL_SPI_Receive_DMA(&hspi1, spi_rx_buf, 9);
 
+  Enable_Flash_Interrupts_NVIC();
+
+
+
   /* Infinite loop */
   /* USER CODE BEGIN WHILE */
 
@@ -350,7 +360,7 @@ int main(void)
 
 	  const volatile uint32_t *userConfig = &user_config_sector1;
 
-	  HAL_StatusTypeDef b = HAL_FLASH_Program(FLASH_TYPEPROGRAM_BYTE, (uint32_t) userConfig, Data);
+	  HAL_StatusTypeDef b = HAL_FLASH_Program_IT(FLASH_TYPEPROGRAM_WORD, (uint32_t) userConfig, Data);
 
 	  Data = Data & ~(uint64_t)(0x1<<i);
 	  //HAL_Delay(3000);
@@ -362,7 +372,7 @@ int main(void)
 	  pI =  USBD_HID_GetPollingInterval(&hUsbDeviceFS);
 	  pI ++;
 	  i ++;
-	  i = i % 16;
+	  i = i % 32;
     /* USER CODE BEGIN 3 */
   }
   /* USER CODE END 3 */
