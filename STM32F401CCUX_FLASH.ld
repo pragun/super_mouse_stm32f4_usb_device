@@ -94,7 +94,7 @@ SECTIONS
     
  .config_sector1 : {
   	. = ALIGN(4); 	
-    *(.config_sector1)
+    KEEP(*(.config_sector1))
     . = . + 0x4000 - 4;
     . = ALIGN(4); 
  } >FLASH
@@ -102,7 +102,7 @@ SECTIONS
   
  .config_sector2 : { 
     . = ALIGN(4);
-    *(.config_sector2)
+    KEEP(*(.config_sector2))
     . = . + 0x4000 - 4; 
     . = ALIGN(4);
  } >FLASH
