@@ -3,8 +3,8 @@
 
 struct RootNode_Node{
 	uint8_t validity_bitmask;
-	Key_Reporting_Configuration_Node_Typedef* node_ptrs[8];
-	RootNode_Node* next_tree_root_index_node;
+	volatile const Key_Reporting_Configuration_Node_Typedef* node_ptrs[8];
+	volatile const RootNode_Node* next_tree_root_index_node;
 };
 
 /*
@@ -18,12 +18,20 @@ struct RootNode_Node{
  * down the links
  */
 
-enum SectorState : uint8_t{
-	INVALID = 0x00,
-	VALID = 0xF0,
-	ERASED = 0xFF,
-};
+namespace SectorState {
+	enum SectorState : uint8_t{
+		INVALID = 0x00,
+		VALID = 0xF0,
+		ERASED = 0xFF,
+	};
+}
 
-[[gnu::section(".config_sector1")]] [[gnu::used]] volatile const uint32_t SectorState1 = 0xFFFFFFFF ;
-[[gnu::section(".config_sector2")]] [[gnu::used]] volatile const uint32_t SectorState2 = 0xFFFFFFFF ;
+extern volatile const Key_Reporting_Configuration_Node_Typedef FirstNode;
+
+[[using gnu : section(".config_sector1") , used]] volatile const uint8_t SectorState1 = SectorState::VALID ;
+[[using gnu : section(".config_sector2") , used]] volatile const uint8_t SectorState2 = SectorState::ERASED ;
+[[using gnu : section(".config_sector1") , used]] volatile const RootNode_Node FirstRootNode = { 0xFF, {&FirstNode,0,0,0,0,0,0,0}, nullptr};
+[[using gnu : section(".config_sector1") , used]] volatile const Key_Reporting_Configuration_Node_Typedef FirstNode = {0x00, 0x00, 0x00, 0x00, 0x00, 0x00};
+
+
 
