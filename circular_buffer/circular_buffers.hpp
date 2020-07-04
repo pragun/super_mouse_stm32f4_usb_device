@@ -8,6 +8,7 @@
  */
 
 #include <tuple>
+
 #include "ring_buffer.hpp"
 
 enum class RingState { ClearToWrite, Queued, Sending };

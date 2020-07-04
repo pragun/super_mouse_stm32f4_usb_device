@@ -7,12 +7,12 @@
  * License:
  */
 
-#include "ring_buffer.cpp"
-#include "circular_buffers.hpp"
 #include <tuple>
 #include <cstring>
+#include "ring_buffer.cpp"
+#include "circular_buffers.hpp"
 
-		
+
 uint16_t UART_Tx_CircularBuffer::write_to_queue(char* txt, uint16_t n) {
 	return ring_buf.copy_in_with_rollover<RingState::ClearToWrite, RingState::Queued>(n, txt);
 }
