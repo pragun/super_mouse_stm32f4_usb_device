@@ -1,5 +1,6 @@
 
 #include "mouse_hid_reports.h"
+#include "reporting_functions.h"
 
 class MouseEventHandler {
 private:
@@ -24,17 +25,24 @@ private:
 	uint16_t current_keypad_state = 0;
 	uint16_t previous_keypad_state = 0;
 
-	//Mouse_HID_Report_TypeDef* mouse_hid_report;
-	Absolute_Mouse_HID_Report_TypeDef* absolute_mouse_hid_report;
+	Mouse_HID_Report_TypeDef* mouse_hid_report;
 
-	Mouse_HID_Report_TypeDef* create_or_retreive_default_mouse_hid_report(Mouse_HID_Report_TypeDef*);
+	Mouse_HID_Report_TypeDef* create_or_retreive_default_mouse_hid_report();
 	Mouse_HID_Report_TypeDef* report_mouse_movement(Mouse_HID_Report_TypeDef*);
 	Mouse_HID_Report_TypeDef* report_mouse_button_state(Mouse_HID_Report_TypeDef*);
 
-	void report_altered_mouse_movement(void* report,void* parameters);
-	void report_absolute_mouse(void* report, void* parameters);
-	void report_keyboard_key_press_release(void* report, void* parameters);
-	void report_modulo_movement_as_keys_press_release(void* report, void* parameters);
+	void report_altered_mouse_movement(void* parameters);
+	void report_absolute_mouse_position(void* parameters);
+	void report_keyboard_key_press_release(void* parameters);
+	void report_movement_mod_as_keys_press_release(void* parameters);
+	void dont_report_anything(void* b);
+
+	void create_reporting_function_lookup_table();
+
+	typedef  void (MouseEventHandler::*reporting_function_ptr)(void *);  // Please do this!
+	reporting_function_ptr reporting_function_lookup_table[64];
+
+	Key_Report_Event_Config_Typedef* key_reporting_lookup[NUM_APPLICATIONS_KEYPAD][NUM_EVENT_TYPES_KEYPAD][NUM_KEYS_KEYPAD];
 
 public:
 	void (*start_timer)();

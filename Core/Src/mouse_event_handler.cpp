@@ -5,10 +5,10 @@
  *      Author: Pragun Goyal
  *
  */
-#include "circular_buffers.hpp"
 #include "usb_device.h"
 #include "usbd_hid.h"
 #include "mouse_event_handler.hpp"
+#include "../../circular_buffer/circular_buffers.hpp"
 
 // All these are in milliseconds
 // For all of these  read  "Since the time the KeyWasFirstPressed
@@ -17,7 +17,6 @@ uint16_t long_press_min_interval = 100;  	// .... the user must release the key 
 uint16_t long_press_max_interval = 2000;	// .... the user must release the key within this interval to register a long_press
 uint16_t movement_event_max_start_interval = 100; 	// .. the user must start moving the mouse to start a movement event chain
 HIDContinuousBlockCircularBuffer hid_report_buf;
-
 // The KeyPadHandler is called by SPI Mouse RX when a KeyPad change is seen
 
 void MouseEventHandler::update_state(int16_t dx, int16_t dy, int8_t dz, uint32_t button_state){
@@ -29,18 +28,8 @@ void MouseEventHandler::update_state(int16_t dx, int16_t dy, int8_t dz, uint32_t
 	current_keypad_state = (button_state >> 8) & 0x0FFF;
 }
 
-/*
-absolute_mouse_hid_report = (Absolute_Mouse_HID_Report_TypeDef*) hid_report_buf.allocate_space_for_report((uint16_t) sizeof(Absolute_Mouse_HID_Report_TypeDef));
-if (absolute_mouse_hid_report != nullptr){
-	absolute_mouse_hid_report->report_id = 0x03;
-	absolute_mouse_hid_report->buttons = 0x01;
-	absolute_mouse_hid_report->mouse_x = 5000;
-	absolute_mouse_hid_report->mouse_y = 5000;
-	previous_keypad_button_state = current_keypad_button_state;
-}
-*/
-
-Mouse_HID_Report_TypeDef* MouseEventHandler::create_or_retreive_default_mouse_hid_report(Mouse_HID_Report_TypeDef* report){
+Mouse_HID_Report_TypeDef* MouseEventHandler::create_or_retreive_default_mouse_hid_report(){
+	Mouse_HID_Report_TypeDef*& report = mouse_hid_report;
 	if(report == nullptr){
 		report = (Mouse_HID_Report_TypeDef*) hid_report_buf.allocate_space_for_report((uint16_t) sizeof(Mouse_HID_Report_TypeDef));
 		if (report != nullptr){
@@ -61,9 +50,8 @@ Mouse_HID_Report_TypeDef* MouseEventHandler::create_or_retreive_default_mouse_hi
 };
 
 
-
 Mouse_HID_Report_TypeDef* MouseEventHandler::report_mouse_movement(Mouse_HID_Report_TypeDef* report){
-	report = create_or_retreive_default_mouse_hid_report(report);
+	report = create_or_retreive_default_mouse_hid_report();
 	if(report != nullptr){
 		report->mouse_x = accumulated_mouse_del_x;
 		report->mouse_y = accumulated_mouse_del_y;
@@ -77,14 +65,16 @@ Mouse_HID_Report_TypeDef* MouseEventHandler::report_mouse_movement(Mouse_HID_Rep
 	return report;
 }
 
+
 inline Mouse_HID_Report_TypeDef* MouseEventHandler::report_mouse_button_state(Mouse_HID_Report_TypeDef* report){
 	// No need to do anything else, if a mouse hid report is created
 	// it already includes button state
-	return create_or_retreive_default_mouse_hid_report(report);
+	return create_or_retreive_default_mouse_hid_report();
 }
 
+
 void MouseEventHandler::hid_poll_interval_timer_callback(){
-	Mouse_HID_Report_TypeDef* mouse_hid_report = nullptr;
+	mouse_hid_report = nullptr;
 	if (previous_primary_button_state != current_primary_button_state){
 		//If there is a change in the button_state, the following will make sure that a Mouse HID report is included
 		mouse_hid_report = report_mouse_button_state(mouse_hid_report);
@@ -125,6 +115,15 @@ void MouseEventHandler::hid_poll_interval_timer_callback(){
 	}
 
 	mouse_hid_report = nullptr;
+
+	/*
+	if(USB_HID_Ready_To_TX_Next_Report(&hUsbDeviceFS)){
+		auto [report, len] = hid_report_buf.transfer_out_next_report();
+		if (len > 0){
+			Assuming_Endpoint_Ready_Send_HID_Report(&hUsbDeviceFS, report, len);
+		}
+	}*/
+
 	USB_HID_Send_Next_Report(&hUsbDeviceFS);
 }
 

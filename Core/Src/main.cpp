@@ -21,11 +21,11 @@
 /* Includes ------------------------------------------------------------------*/
 #include <cstdio>
 
-#include "circular_buffers.hpp"
 #include "main.h"
 #include "usb_device.h"
 #include "usbd_hid.h"
 #include "mouse_event_handler.hpp"
+#include "../../circular_buffer/circular_buffers.hpp"
 
 
 /* Private includes ----------------------------------------------------------*/
@@ -101,8 +101,8 @@ int16_t del_x = 0;
 int16_t del_y = 0;
 int8_t del_z = 0;
 
-Mouse_HID_Report_TypeDef* mouse_hid_report;
-Absolute_Mouse_HID_Report_TypeDef* absolute_mouse_hid_report;
+//Mouse_HID_Report_TypeDef* mouse_hid_report;
+//Absolute_Mouse_HID_Report_TypeDef* absolute_mouse_hid_report;
 
 #pragma pack(1)
 typedef struct
@@ -122,11 +122,6 @@ uint8_t rx_buf[UART_RX_BUF_SIZE];
 uint8_t spi_rx_buf[] = "Test Test Test Test Test ";
 UART_Tx_CircularBuffer uart2_tx_buf;
 
-//const char memtest[]  = "Test";
-//const char memtest[] = "Test Test Test Test Test Test Test Test Test Test Test Test Test Test Test Test Test Test Test Test Test Test Test Test Test Test Test Test Test Test Test Test Test Test Test Test Test Test Test Test Test Test Test Test Test Test Test Test Test Test Test Test Test Test Test Test Test Test Test Test Test Test Test Test Test Test Test Test Test Test Test Test Test Test Test Test Test Test Test Test Test Test Test Test Test Test Test Test Test Test Test Test Test Test Test Test Test Test Test Test Test Test Test Test Test Test Test Test Test Test Test Test Test Test Test Test Test Test Test Test Test Test Test Test Test Test Test Test Test Test Test Test Test Test Test Test Test Test Test Test Test Test Test Test Test Test ";
-
-volatile const uint32_t user_config_sector1 __attribute__ ((section(".config_sector1"))) = 0xFFFFFFFF ;
-volatile const uint32_t user_config_sector2 __attribute__ ((section(".config_sector2"))) = 0x2FFF ;
 
 /* USER CODE END PV */
 
@@ -176,11 +171,11 @@ uint32_t read_keypress_time_ms(){
 
 MouseEventHandler mouse_event_handler(&stop_keypress_timer, &start_keypress_timer, &read_keypress_time_ms);
 
-void HAL_GPIO_EXTI_Callback(uint16_t GPIO_Pin)
+/*void HAL_GPIO_EXTI_Callback(uint16_t GPIO_Pin)
 {
 	gpio_pa8_interrupt_count ++ ;
 	printf("GPIO Interrupt received.\r\n");
-}
+}*/
 
 void spi_rx_complete(SPI_HandleTypeDef *hspi){
 	spi_rx_count ++ ;
@@ -267,6 +262,8 @@ int _write(int file, char *ptr, int len)
 	return len;
 }
 
+extern void check_on_config();
+
 
 /* USER CODE END 0 */
 
@@ -280,10 +277,12 @@ void Enable_Flash_Interrupts_NVIC(){
 	  HAL_NVIC_EnableIRQ(FLASH_IRQn);
 }
 
+/*
 void HAL_FLASH_EndOfOperationCallback(uint32_t ReturnValue){
 	printf("Finished write operation, return value:%x\n",ReturnValue);
 	printf("Flash Value:%x\n",user_config_sector1);
-}
+}*/
+
 
 int main(void)
 {
@@ -350,11 +349,10 @@ int main(void)
   uint64_t Data = 0x00000000FFFFFFFF;
   uint8_t i = 0;
 
-
-
   while (1)
   {
 	  /* USER CODE END WHILE */
+	  /*
 	  HAL_StatusTypeDef a = HAL_FLASH_Unlock();
 	  __HAL_FLASH_CLEAR_FLAG(FLASH_FLAG_EOP | FLASH_FLAG_OPERR | FLASH_FLAG_WRPERR | FLASH_FLAG_PGAERR | FLASH_FLAG_PGSERR | FLASH_FLAG_PGPERR);
 
@@ -363,12 +361,12 @@ int main(void)
 	  HAL_StatusTypeDef b = HAL_FLASH_Program_IT(FLASH_TYPEPROGRAM_WORD, (uint32_t) userConfig, Data);
 
 	  Data = Data & ~(uint64_t)(0x1<<i);
-	  //HAL_Delay(3000);
 
 	  HAL_FLASH_Lock();
+	  */
 
 	  HAL_Delay(1000);
-
+	  check_on_config();
 	  pI =  USBD_HID_GetPollingInterval(&hUsbDeviceFS);
 	  pI ++;
 	  i ++;
