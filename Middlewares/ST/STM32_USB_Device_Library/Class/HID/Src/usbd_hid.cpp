@@ -47,7 +47,8 @@
 #include "usbd_hid.h"
 #include "usbd_ctlreq.h"
 #include "usb_hid_descriptors.h"
-#include "circular_buffers.hpp"
+
+#include "../../../../../../circular_buffer/circular_buffers.hpp"
 
 static uint8_t  USBD_HID_Init (USBD_HandleTypeDef *pdev,
                                uint8_t cfgidx);
@@ -393,6 +394,24 @@ static uint8_t  *USBD_HID_GetOtherSpeedCfgDesc (uint16_t *length)
   * @retval status
   */
 
+/*
+bool USB_HID_Ready_To_TX_Next_Report(USBD_HandleTypeDef *pdev){
+	USBD_HID_HandleTypeDef *hhid = (USBD_HID_HandleTypeDef*)pdev->pClassData;
+	if ((pdev->dev_state == USBD_STATE_CONFIGURED ) && (hhid->state == HID_IDLE)){
+		return true;
+	}else{
+		return false;
+	}
+}
+
+uint8_t Assuming_Endpoint_Ready_Send_HID_Report(USBD_HandleTypeDef *pdev, char* report, uint16_t len){
+	USBD_LL_Transmit (pdev,
+			HID_EPIN_ADDR,
+			(uint8_t*) report,
+			len);
+}*/
+
+
 uint8_t USB_HID_Send_Next_Report(USBD_HandleTypeDef *pdev){
 	USBD_HID_HandleTypeDef *hhid = (USBD_HID_HandleTypeDef*)pdev->pClassData;
 	if ((pdev->dev_state == USBD_STATE_CONFIGURED ) && (hhid->state == HID_IDLE)){
@@ -414,6 +433,7 @@ uint8_t USB_HID_Send_Next_Report(USBD_HandleTypeDef *pdev){
 		}
 	}
 }
+
 
 static uint8_t  USBD_HID_DataIn (USBD_HandleTypeDef *pdev,
                               uint8_t epnum)
