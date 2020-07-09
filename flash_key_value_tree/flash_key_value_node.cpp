@@ -1,4 +1,4 @@
-#include "key_value_flash_node.hpp"
+#include "flash_key_value_node.hpp"
 
 extern bool flash_write_byte(void* address, uint8_t data);
 
@@ -75,7 +75,7 @@ Node_Address Key_Value_Flash_Node::next_root_node_link(){
 	return root_link_address;
 }
 
-static Key_Value_Flash_Node Key_Value_Flash_Node::read_node_from_flash(Node_Address address){
+Key_Value_Flash_Node Key_Value_Flash_Node::read_node_from_flash(Node_Address address){
 	return Key_Value_Flash_Node(address);
 }
 
@@ -84,4 +84,6 @@ uint32_t Key_Value_Flash_Node::furthest_memory_location(){
 }
 
 //This function is only used if the node is to be written to the flash
-static Key_Value_Flash_Node Key_Value_Flash_Node::construct_for_writing_to_flash(uint8_t application_index, uint8_t keypad_keynum, uint8_t event_data_size, uint8_t* event_data);
+Key_Value_Flash_Node Key_Value_Flash_Node::construct_for_writing_to_flash(uint8_t application_index, uint8_t keypad_keynum, uint8_t event_data_size, uint8_t* event_data){
+	return Key_Value_Flash_Node(0x0);
+}

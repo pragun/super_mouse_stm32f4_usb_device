@@ -44,11 +44,11 @@
   EndBSPDependencies */
 
 /* Includes ------------------------------------------------------------------*/
+#include "circular_buffers.hpp"
 #include "usbd_hid.h"
 #include "usbd_ctlreq.h"
 #include "usb_hid_descriptors.h"
 
-#include "../../../../../../circular_buffer/circular_buffers.hpp"
 
 static uint8_t  USBD_HID_Init (USBD_HandleTypeDef *pdev,
                                uint8_t cfgidx);

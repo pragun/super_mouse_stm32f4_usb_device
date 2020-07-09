@@ -32,14 +32,14 @@ struct traversal<void>{
 	constexpr static Traversal_Type traversal_type = Traversal_Type::map;
 };
 
-class Flash_Key_Value_Store { //Rename to Flash_Key_Value_Tree
+class Flash_Key_Value_Tree { //Rename to Flash_Key_Value_Tree
 private:
 	Node_Address active_root;
 	Node_Address growth_node;
-	uint32_t furthest_used_memory_location;
+	//uint32_t furthest_used_memory_location;
 
 public:
-	Flash_Key_Value_Store(Node_Address address);
+	Flash_Key_Value_Tree(Node_Address address);
 
 	template <typename T>
 	typename traversal<T>::return_type traverse_with_node_function(typename traversal<T>::func_type func, typename traversal<T>::accumulator_type value);

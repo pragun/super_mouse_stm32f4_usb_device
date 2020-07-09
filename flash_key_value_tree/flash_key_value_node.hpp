@@ -30,14 +30,11 @@ private:
 
 	Node_Address starting_address; //rename to flash_address;
 	uint8_t size;
-	const volatile header_typedef* header;
 	Node_Address root_link_address;
 	Node_Address* link_addresses;
 
 	bool written_to_flash;
 	const bool read_from_flash;
-
-	std::array<std::tuple<Node_Address, Link_State_Enum>, MAX_NUM_LINKS> links_states_arr;
 
 public:
 	struct header_typedef{
@@ -57,6 +54,10 @@ public:
 		uint8_t value_size;
 		uint8_t value[];
 	};
+
+
+	const volatile header_typedef* header;
+	std::array<std::tuple<Node_Address, Link_State_Enum>, MAX_NUM_LINKS> links_states_arr;
 
 	template<enum Validity_Flag_Enum flag> bool flag_state();
 	template<enum Validity_Flag_Enum flag> bool invalidate_flag();

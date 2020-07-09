@@ -37,8 +37,12 @@
 			- Add a root_node_link to the new Key Node
  */
 
-uint32_t furthest_memory_location_used(Key_Value_Flash_Node &a, uint32_t previous_max_value){
+uint32_t furthest_memory_location_used_func(Key_Value_Flash_Node &a, uint32_t previous_max_value){
 	return (uint32_t) std::max(previous_max_value, a.furthest_memory_location());
+}
+
+bool growth_node_find_func(Key_Value_Flash_Node &a) {
+	return (a.flag_state<Validity_Flag_Enum::growth_node>());
 }
 
 template<typename T>
@@ -51,17 +55,14 @@ bool always_false(T a){
 	return false;
 }
 
-Flash_Key_Value_Store::Flash_Key_Value_Store(Node_Address address):
-				furthest_used_memory_location(0)
+Flash_Key_Value_Tree::Flash_Key_Value_Tree(Node_Address address)
 {
-	// build-out the tree
 	active_root = find_active_root_node(address);
 	//growth_node = find_growth_node();
 };
 
-
 template <typename T>
-typename traversal<T>::return_type Flash_Key_Value_Store::traverse_with_node_function(typename traversal<T>::func_type func, typename traversal<T>::accumulator_type value){
+typename traversal<T>::return_type Flash_Key_Value_Tree::traverse_with_node_function(typename traversal<T>::func_type func, typename traversal<T>::accumulator_type value){
 	std::stack<std::tuple<Node_Address,Node_Address>> traversal_stack;
 	traversal_stack.push(std::make_tuple(active_root,0));
 
@@ -93,7 +94,7 @@ typename traversal<T>::return_type Flash_Key_Value_Store::traverse_with_node_fun
 						return value;
 }
 
-static Node_Address Flash_Key_Value_Store::find_active_root_node(Node_Address address){
+Node_Address Flash_Key_Value_Tree::find_active_root_node(Node_Address address){
 	Node_Address next_address = address;
 	bool found_root = false;
 	do{
@@ -108,30 +109,30 @@ static Node_Address Flash_Key_Value_Store::find_active_root_node(Node_Address ad
 	return address;
 }
 
-bool Flash_Key_Value_Store::active_root_found(){
+bool Flash_Key_Value_Tree::active_root_found(){
 	return (active_root != 0);
 }
 
-void Flash_Key_Value_Store::map_with_node_function(std::function<void(Key_Value_Flash_Node&)>func){
+void Flash_Key_Value_Tree::map_with_node_function(std::function<void(Key_Value_Flash_Node&)>func){
 	traverse_with_node_function<void>(func,0);
 }
 
-void Flash_Key_Value_Store::map_with_key_value_function(std::function<void(const uint32_t key, const uint8_t size, const uint8_t* value)> func){
+void Flash_Key_Value_Tree::map_with_key_value_function(std::function<void(const uint32_t key, const uint8_t size, const uint8_t* value)> func){
 	auto node_function = [func](const Key_Value_Flash_Node &a){
 		func(a.header->key, a.header->value_size, (const unsigned char*) &a.header->value[0]);
 	};
 	map_with_node_function(node_function);
 }
 
-uint32_t Flash_Key_Value_Store::find_furthest_used_memory_location(){
+uint32_t Flash_Key_Value_Tree::find_furthest_used_memory_location(){
 	/* auto node_function = [](Key_Report_Flash_Node &a, uint32_t previous_max_value){
 			return (uint32_t) std::max(previous_max_value, a.furthest_memory_location());
 		}; */
 
-	return traverse_with_node_function<uint32_t>(furthest_memory_location_used, (uint32_t) 0);
+	return traverse_with_node_function<uint32_t>(furthest_memory_location_used_func, (uint32_t) 0);
 }
 
-std::tuple<Node_Address, Node_Address> Flash_Key_Value_Store::find_node_and_parent_matching_key(uint32_t key){
+std::tuple<Node_Address, Node_Address> Flash_Key_Value_Tree::find_node_and_parent_matching_key(uint32_t key){
 	auto find_function = [key](Key_Value_Flash_Node &a) -> bool {
 		return (a.header->key == key);
 	};
@@ -139,16 +140,17 @@ std::tuple<Node_Address, Node_Address> Flash_Key_Value_Store::find_node_and_pare
 	return traverse_with_node_function<bool>(find_function, std::make_tuple((Node_Address)0,(Node_Address)0));
 }
 
-std::tuple<Node_Address, Node_Address> Flash_Key_Value_Store::find_growth_node(){
-	auto find_function = [](Key_Value_Flash_Node &a) -> bool {
+std::tuple<Node_Address, Node_Address> Flash_Key_Value_Tree::find_growth_node(){
+	/*
+	 * auto find_function = [](Key_Value_Flash_Node &a) -> bool {
 		return (a.flag_state<Validity_Flag_Enum::growth_node>());
-	};
-
-	return traverse_with_node_function<bool>(find_function, std::make_tuple((Node_Address)0,(Node_Address)0));
+		};
+	 */
+	return traverse_with_node_function<bool>(growth_node_find_func, std::make_tuple((Node_Address)0,(Node_Address)0));
 }
 
 
-bool Flash_Key_Value_Store::update_key_value(const uint32_t key, const uint8_t size, const uint8_t* value){
+bool Flash_Key_Value_Tree::update_key_value(const uint32_t key, const uint8_t size, const uint8_t* value){
 
 }
 
