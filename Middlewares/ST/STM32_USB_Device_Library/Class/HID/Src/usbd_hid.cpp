@@ -105,7 +105,7 @@ USBD_ClassTypeDef  USBD_HID =
 /** @defgroup USBD_HID_Private_Functions
   * @{
   */
-
+extern uint8_t PrintHexBuf(uint8_t *buff, uint8_t len);
 /**
   * @brief  USBD_HID_Init
   *         Initialize the HID interface
@@ -482,7 +482,8 @@ static uint8_t USBD_HID_EP0_RxReady(USBD_HandleTypeDef *pdev)
 
   if (hhid->IsReportAvailable == 1U)
   {
-    //((USBD_CUSTOM_HID_ItfTypeDef *)pdev->pUserData)->OutEvent(hhid->Report_buf[0],
+	 PrintHexBuf(hhid->Report_buf, 17);
+	//((USBD_CUSTOM_HID_ItfTypeDef *)pdev->pUserData)->OutEvent(hhid->Report_buf[0],
     //                                                         hhid->Report_buf[1]);
     hhid->IsReportAvailable = 0U;
   }

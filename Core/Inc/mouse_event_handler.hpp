@@ -42,7 +42,7 @@ private:
 	typedef  void (MouseEventHandler::*reporting_function_ptr)(void *);  // Please do this!
 	reporting_function_ptr reporting_function_lookup_table[64];
 
-	Key_Report_Event_Config_Typedef* key_reporting_lookup[NUM_APPLICATIONS_KEYPAD][NUM_EVENT_TYPES_KEYPAD][NUM_KEYS_KEYPAD];
+	Keypad_Reporting_Lookup_Entry_Typedef key_reporting_lookup[NUM_APPLICATIONS_KEYPAD][NUM_EVENT_TYPES_KEYPAD][NUM_KEYS_KEYPAD];
 
 public:
 	void (*start_timer)();
