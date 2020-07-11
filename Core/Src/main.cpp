@@ -25,7 +25,7 @@
 #include "usb_device.h"
 #include "usbd_hid.h"
 #include "mouse_event_handler.hpp"
-#include "../../circular_buffer/circular_buffers.hpp"
+#include "circular_buffers.hpp"
 
 
 /* Private includes ----------------------------------------------------------*/
@@ -123,6 +123,7 @@ uint8_t spi_rx_buf[] = "Test Test Test Test Test ";
 UART_Tx_CircularBuffer uart2_tx_buf;
 
 
+extern void test_config(uint8_t test_index);
 /* USER CODE END PV */
 
 /* Private function prototypes -----------------------------------------------*/
@@ -348,6 +349,9 @@ int main(void)
   uint32_t pI = 0;
   uint64_t Data = 0x00000000FFFFFFFF;
   uint8_t i = 0;
+
+  test_config(1);
+  test_config(2);
 
   while (1)
   {

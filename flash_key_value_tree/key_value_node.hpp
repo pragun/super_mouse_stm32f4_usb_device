@@ -45,7 +45,7 @@ struct Node_Header_Data{
 	uint32_t key;
 	uint8_t value_size;
 
-	uint8_t value[]; //This makes sense only in the case of a node read from flash
+	//uint8_t value[]; //This makes sense only in the case of a node read from flash
 
 	template<Validity_Flag_Enum flag> bool flag_state() const;
 	Link_State_Enum link_status(uint8_t link_id) const;
@@ -89,7 +89,7 @@ private:
 	Node_Address address_on_flash;
 	uint8_t size_on_flash;
 	Node_Address root_link_address;
-
+	uint8_t* data;
 	std::array<Node_Address, MAX_NUM_CHILD_NODES> link_addresses;
 	Node_Address implicit_link_address;
 
@@ -108,7 +108,7 @@ public:
 	static bool growth_node_find_func(Key_Value_Flash_Node &a);
 	uint32_t furthest_memory_location();
 
-	uint32_t key() const;
-	uint8_t* value() const;
-	uint8_t value_size() const;
+	const uint32_t key() const;
+	const uint8_t* value() const;
+	const uint8_t value_size() const;
 };

@@ -7,15 +7,16 @@
 				- The finding of the growth_node will be tied to this
 
 		- add new <Key, Value>:
-			- Find the growth node
-			- Create a RAM copy of the new node
-			{
-				- Find the starting_location_of_unwritten_flash
-				- Add a link from the growth node to the new node
-				(These two need to be done together because the second)
-				(one depends on the first one and vice versa)
-			}
-			- Write the node to flash at starting_location_of_unwritten_flash
+				- First Make sure that the said key doesn't already exist'
+				- Find the growth node
+				- Create a RAM copy of the new node
+				{
+					- Find the starting_location_of_unwritten_flash
+					- Add a link from the growth node to the new node
+					(These two need to be done together because the second)
+					(one depends on the first one and vice versa)
+				}
+				- Write the node to flash at starting_location_of_unwritten_flash
 
 		- edit <Key, Value> to new value:
 			- Find the Node corresponding to the Key,
@@ -122,17 +123,6 @@ void Flash_Key_Value_Tree::map_with_key_value_function(std::function<void(const 
 	};
 	map_with_node_function(node_function);
 }
-
-/* Deprecated, will use growth node for this
-uint32_t Flash_Key_Value_Tree::find_furthest_used_memory_location(){
-	// auto node_function = [](Key_Report_Flash_Node &a, uint32_t previous_max_value){
-	//		return (uint32_t) std::max(previous_max_value, a.furthest_memory_location());
-	//	};
-
-	return traverse_with_node_function<uint32_t>(furthest_memory_location_used_func, (uint32_t) 0);
-}
-*/
-
 
 std::tuple<Node_Address, Node_Address> Flash_Key_Value_Tree::find_node_and_parent_matching_key(uint32_t key){
 	auto find_function = [key](Key_Value_Flash_Node &a) -> bool {
