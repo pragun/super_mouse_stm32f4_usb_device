@@ -83,9 +83,10 @@ public:
 	void reset_to_start();
 };
 
-
+using Nodes_Filter = LazyFilter<Node_Address,MAX_NUM_CHILD_NODES>;
 class Key_Value_Flash_Node {
 private:
+
 	Key_Value_Flash_Node(Node_Address address);
 
 	//Node_Address address_on_flash;
@@ -93,9 +94,9 @@ private:
 	Node_Address root_link_address;
 	uint8_t* data;
 	std::array<Node_Address, MAX_NUM_CHILD_NODES> link_addresses;
-	Node_Address implicit_link_address;
+	//Node_Address implicit_link_address;
 
-	LazyFilter<Node_Address,MAX_NUM_CHILD_NODES> valid_children_lazyfltr;
+	Nodes_Filter valid_children_lazyfltr;
 
 	Node_Header_Typedef<Storage::flash>* header;
 
@@ -103,13 +104,22 @@ private:
 	uint8_t find_link_id_by_address(Node_Address address);
 	bool mark_link_by_addr_as(Node_Address address, Link_State_Enum link_state);
 
+	struct valid_children_filter_func_typedef{
+		Node_Header_Typedef<Storage::flash>* header;
+		bool operator()(Node_Address n_addr, uint8_t index);
+	};
+
+	valid_children_filter_func_typedef valid_children_filter_func;
+
 public:
 	static Key_Value_Flash_Node read_node_from_flash(Node_Address address);
 	bool is_root() const;
 	Node_Address link_to_next_root_node();
 
-	uint8_t num_valid_children_links();
-	std::array<Node_Address,MAX_NUM_CHILD_NODES> valid_children_links();
+	Nodes_Filter& valid_children_links();
+
+//	uint8_t num_valid_children_links();
+//	std::array<Node_Address,MAX_NUM_CHILD_NODES> valid_children_links();
 
 	Node_Address mark_growth_link_valid_and_return_address_it_points_to();
 	static bool growth_node_find_func(Key_Value_Flash_Node &a);

@@ -87,10 +87,9 @@ typename traversal_types<T>::return_t Flash_Key_Value_Tree::traverse_with_node_f
 							return std::make_tuple(node_addr, parent_addr);
 						};
 
-		for(const auto child_node_addr : a.valid_children_links()){
-			if(child_node_addr != 0){
-				traversal_stack.push(std::make_tuple(child_node_addr,node_addr));
-			}
+		for(Nodes_Filter valid_children_links = a.valid_children_links(); !valid_children_links.reached_end(); ++valid_children_links){
+			Node_Address child_node_addr = valid_children_links.value();
+			traversal_stack.push(std::make_tuple(child_node_addr,node_addr));
 		}
 	}
 
@@ -214,14 +213,11 @@ bool Flash_Key_Value_Tree::update_node(const uint32_t key, const uint8_t size, c
 		max_num_links_that_can_be_transferred_in_from_old_node = MAX_NUM_CHILD_NODES - 1;
 	}
 
-	if(edit_node.num_valid_children_links() <= max_num_links_that_can_be_transferred_in_from_old_node){
-
-		std::array<Node_Address,MAX_NUM_CHILD_NODES> edit_nodes_children = edit_node.valid_children_links();
-		for(const auto edit_nodes_child : edit_nodes_children){
-			if(edit_nodes_child != (Node_Address)0){
-				new_node.add_valid_non_growth_child_link(edit_nodes_child);
+	Nodes_Filter valid_children_links = edit_node.valid_children_links();
+	if(valid_children_links.num_items() <= max_num_links_that_can_be_transferred_in_from_old_node){
+		for(; !valid_children_links.reached_end(); ++valid_children_links){
+				new_node.add_valid_non_growth_child_link(valid_children_links.value());
 			}
-		}
 
 		//We'll mark the link from the parent node pointing to the edit_node as invalid
 		//as the new node will take care of the responsibility for each of the edit node's children

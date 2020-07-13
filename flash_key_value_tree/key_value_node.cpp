@@ -8,7 +8,7 @@ extern bool memcpy_to_flash(uint32_t flash_addr, const uint8_t* data, uint8_t si
 template <typename T, int N>
 void LazyFilter<T,N>::find_next(){
 	for(; index < base_size; index++){
-		if(filter_func(base_array[index]))
+		if(filter_func(base_array[index],index))
 			break;
 	}
 }
@@ -178,16 +178,17 @@ bool Key_Value_Ram_Node::write_to_address(Node_Address addr){
 
 /** --- Key_Value_Flash_Node --- **/
 
+bool Key_Value_Flash_Node::valid_children_filter_func_typedef::operator ()(Node_Address n_addr, uint8_t index){
+	return (header->link_status(index) == Link_State_Enum::valid);
+}
+
 inline Key_Value_Flash_Node::Key_Value_Flash_Node(Node_Address address):
 header(reinterpret_cast<Node_Header_Typedef<Storage::flash>*>(address)),
 data(nullptr),
 root_link_address((Node_Address) 0),
 size_on_flash(0),
-valid_children_lazyfltr(
-		link_addresses,
-		[this](Node_Address n_addr, uint8_t index){
-		return (this->header->node_link_status(index) == Link_State_Enum::valid); }
-)
+valid_children_filter_func{this->header},
+valid_children_lazyfltr(link_addresses, valid_children_filter_func)
 {
 	uint8_t* byte_address = (uint8_t*) address;
 	uint8_t offset = sizeof(Node_Header_Typedef<Storage::flash>);
@@ -220,15 +221,20 @@ valid_children_lazyfltr(
 	}
 
 	size_on_flash = offset;
-	implicit_link_address = (Node_Address) (reinterpret_cast<uint32_t>(address) + size_on_flash);
+	//implicit_link_address =
 
-	link_addresses[Implicit_Link_ID] = reinterpret_cast<Node_Address>(implicit_link_address);
+	link_addresses[Implicit_Link_ID] = (Node_Address) (reinterpret_cast<uint32_t>(address) + size_on_flash);
+}
+
+Nodes_Filter& Key_Value_Flash_Node::valid_children_links(){
+	return valid_children_lazyfltr;
 }
 
 Node_Address Key_Value_Flash_Node::flash_address(){
 	return reinterpret_cast<Node_Address>(header);
 }
 
+/*
 uint8_t Key_Value_Flash_Node::num_valid_children_links(){
 	uint8_t ret_val = 0;
 	for (uint8_t i = 1; i < MAX_NUM_CHILD_NODES; i++){ //The first link is implicit
@@ -240,8 +246,9 @@ uint8_t Key_Value_Flash_Node::num_valid_children_links(){
 		ret_val++;
 
 	return ret_val;
-}
+}*/
 
+/*
 std::array<Node_Address,MAX_NUM_CHILD_NODES> Key_Value_Flash_Node::valid_children_links(){
 	std::array<Node_Address,MAX_NUM_CHILD_NODES> ret_array;
 	for (uint8_t i = 1; i < MAX_NUM_CHILD_NODES; i++){ //The first link is implicit
@@ -256,7 +263,8 @@ std::array<Node_Address,MAX_NUM_CHILD_NODES> Key_Value_Flash_Node::valid_childre
 	else
 		ret_array[0] = (Node_Address) 0;
 	return ret_array;
-}
+}*/
+
 
 
 uint8_t Key_Value_Flash_Node::find_link_id_by_address(Node_Address address){
