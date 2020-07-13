@@ -15,7 +15,7 @@ bool flash_write_byte(uint32_t flash_addr, uint8_t data){
 	return (a == HAL_OK);
 }
 
-bool memcpy_to_flash(uint32_t flash_addr, uint8_t* data, uint8_t size){
+bool memcpy_to_flash(uint32_t flash_addr, const uint8_t* data, uint8_t size){
 	for(uint8_t i = 0; i < size; i++){
 		if(!flash_write_byte(flash_addr, data[i]))
 			return false;

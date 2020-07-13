@@ -3,7 +3,61 @@
 
 extern bool flash_write_byte(uint32_t flash_addr, uint8_t data);
 
-extern bool memcpy_to_flash(uint32_t flash_addr, uint8_t* data, uint8_t size);
+extern bool memcpy_to_flash(uint32_t flash_addr, const uint8_t* data, uint8_t size);
+
+template <typename T, int N>
+void LazyFilter<T,N>::find_next(){
+	for(; index < base_size; index++){
+		if(filter_func(base_array[index]))
+			break;
+	}
+}
+
+template <typename T, int N>
+LazyFilter<T,N>::LazyFilter(std::array<T,N>& base_arr, std::function<bool(T, uint8_t)> ffunc):
+base_array(base_arr),
+base_size(base_array.size()),
+num_items_calculated(false),
+num_items_val(0),
+filter_func(ffunc),
+index(0){
+	find_next();
+};
+
+template <typename T, int N>
+T LazyFilter<T,N>::value(){
+	return base_array[index];
+};
+
+template <typename T, int N>
+bool LazyFilter<T,N>::reached_end(){
+	return !(index <= base_size);
+};
+
+template <typename T, int N>
+void LazyFilter<T,N>::operator++(){
+	index++;
+	find_next();
+};
+
+template <typename T, int N>
+uint8_t LazyFilter<T,N>::num_items(){
+	if(!num_items_calculated){
+		num_items_val = 0;
+		for(uint8_t i = 0; i<base_size; i++){
+			if(filter_func(base_array[i]))
+				num_items_val++;
+		}
+		num_items_calculated = true;
+	}
+	return num_items_val;
+}
+
+template <typename T, int N>
+void LazyFilter<T,N>::reset_to_start(){
+	index = 0;
+	find_next();
+}
 
 /** Node_Header_Data **/
 
@@ -67,11 +121,14 @@ bool Node_Header_Typedef<Storage::flash>::invalidate_flag<Validity_Flag_Enum::gr
 
 
 /** --- Key_Value_RAM_Node --- **/
-Key_Value_Ram_Node::Key_Value_Ram_Node(uint32_t key, uint8_t size, uint8_t* data_ptr)
+Key_Value_Ram_Node::Key_Value_Ram_Node(uint32_t key, uint8_t size, const uint8_t* data_ptr)
 {
 	header_obj = {{ 0x0, 0x0, key, size}}; //The status byte and the node_link_status are initially all cleared out
+
+	// All new nodes that are created have these following flags validated
 	header_obj.validate_flag<Validity_Flag_Enum::data_valid>();
 	header_obj.validate_flag<Validity_Flag_Enum::growth_node>();
+
 	data = data_ptr;
 	header = &header_obj;
 };
@@ -79,6 +136,17 @@ Key_Value_Ram_Node::Key_Value_Ram_Node(uint32_t key, uint8_t size, uint8_t* data
 Key_Value_Ram_Node Key_Value_Ram_Node::create_new_growth_node(uint32_t key, uint8_t size, uint8_t* data){
 	return Key_Value_Ram_Node(key, size, data);
 }
+
+Key_Value_Ram_Node Key_Value_Ram_Node::create_new_root_node(uint32_t key, uint8_t size, const uint8_t* value){
+	auto retval = Key_Value_Ram_Node(key, size, value);
+
+	retval.header_obj.validate_flag<Validity_Flag_Enum::root_node>();
+	retval.header_obj.validate_flag<Validity_Flag_Enum::active_as_root_node>();
+	retval.header_obj.validate_flag<Validity_Flag_Enum::root_node_link_unwritten>();
+
+	return retval;
+}
+
 
 bool Key_Value_Ram_Node::write_to_address(Node_Address addr){
 	uint32_t offset = 0;
@@ -111,8 +179,15 @@ bool Key_Value_Ram_Node::write_to_address(Node_Address addr){
 /** --- Key_Value_Flash_Node --- **/
 
 inline Key_Value_Flash_Node::Key_Value_Flash_Node(Node_Address address):
-address_on_flash(address),
-header(reinterpret_cast<Node_Header_Typedef<Storage::flash>*>(address))
+header(reinterpret_cast<Node_Header_Typedef<Storage::flash>*>(address)),
+data(nullptr),
+root_link_address((Node_Address) 0),
+size_on_flash(0),
+valid_children_lazyfltr(
+		link_addresses,
+		[this](Node_Address n_addr, uint8_t index){
+		return (this->header->node_link_status(index) == Link_State_Enum::valid); }
+)
 {
 	uint8_t* byte_address = (uint8_t*) address;
 	uint8_t offset = sizeof(Node_Header_Typedef<Storage::flash>);
@@ -123,8 +198,6 @@ header(reinterpret_cast<Node_Header_Typedef<Storage::flash>*>(address))
 	if(header->flag_state<Validity_Flag_Enum::root_node>()){
 		root_link_address = *((Node_Address*) &byte_address[offset]);
 		offset += 4;
-	}else{
-		root_link_address = 0;
 	}
 
 	Node_Address* link_addr = reinterpret_cast<Node_Address*>(&byte_address[offset]);
@@ -152,8 +225,24 @@ header(reinterpret_cast<Node_Header_Typedef<Storage::flash>*>(address))
 	link_addresses[Implicit_Link_ID] = reinterpret_cast<Node_Address>(implicit_link_address);
 }
 
+Node_Address Key_Value_Flash_Node::flash_address(){
+	return reinterpret_cast<Node_Address>(header);
+}
 
-std::array<Node_Address,MAX_NUM_CHILD_NODES> Key_Value_Flash_Node::valid_children(){
+uint8_t Key_Value_Flash_Node::num_valid_children_links(){
+	uint8_t ret_val = 0;
+	for (uint8_t i = 1; i < MAX_NUM_CHILD_NODES; i++){ //The first link is implicit
+		if(header->link_status(i) == Link_State_Enum::valid)
+			ret_val ++;
+	}
+
+	if(header->link_status(Implicit_Link_ID) == Link_State_Enum::valid)
+		ret_val++;
+
+	return ret_val;
+}
+
+std::array<Node_Address,MAX_NUM_CHILD_NODES> Key_Value_Flash_Node::valid_children_links(){
 	std::array<Node_Address,MAX_NUM_CHILD_NODES> ret_array;
 	for (uint8_t i = 1; i < MAX_NUM_CHILD_NODES; i++){ //The first link is implicit
 		if(header->link_status(i) == Link_State_Enum::valid)
@@ -206,11 +295,11 @@ inline bool Key_Value_Flash_Node::growth_node_find_func(Key_Value_Flash_Node &a)
 	return (a.header->flag_state<Validity_Flag_Enum::growth_node>());
 }
 
-inline bool Key_Value_Flash_Node::mark_implicit_link_as_valid(){
+inline bool Key_Value_Flash_Node::mark_uninitialized_growth_link_as_valid(){
 	return header->mark_link_as(Implicit_Link_ID, Link_State_Enum::valid);
 }
 
-inline Node_Address Key_Value_Flash_Node::next_root_node_link(){
+inline Node_Address Key_Value_Flash_Node::link_to_next_root_node(){
 	return root_link_address;
 }
 
@@ -219,12 +308,12 @@ Key_Value_Flash_Node Key_Value_Flash_Node::read_node_from_flash(Node_Address add
 }
 
 inline uint32_t Key_Value_Flash_Node::furthest_memory_location(){
-	return address_on_flash + size_on_flash;
+	return flash_address() + size_on_flash;
 }
 
-Node_Address Key_Value_Flash_Node::add_growth_link(){
+Node_Address Key_Value_Flash_Node::mark_growth_link_valid_and_return_address_it_points_to(){
 	if (header->flag_state<Validity_Flag_Enum::growth_node>()){
-		mark_implicit_link_as_valid();
+		mark_uninitialized_growth_link_as_valid();
 		return (link_addresses[Implicit_Link_ID]);
 	}
 	return (Node_Address) 0;
