@@ -350,8 +350,9 @@ int main(void)
   uint64_t Data = 0x00000000FFFFFFFF;
   uint8_t i = 0;
 
-  test_config(1);
-  test_config(2);
+  //test_config(1);
+  //test_config(2);
+  test_config(3);
 
   while (1)
   {

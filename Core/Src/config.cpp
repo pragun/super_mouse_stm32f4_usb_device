@@ -45,6 +45,38 @@ void test_config(uint8_t test){
 		Key_Value_Flash_Node r_new_node = Key_Value_Flash_Node::read_node_from_flash(r1);
 		break;
 	}
+
+	case 3:
+	{
+
+		FLASH_EraseInitTypeDef EraseInitStruct;
+		EraseInitStruct.VoltageRange = FLASH_VOLTAGE_RANGE_3;
+		EraseInitStruct.TypeErase = FLASH_TYPEERASE_SECTORS;
+		EraseInitStruct.Sector = FLASH_SECTOR_1;
+		EraseInitStruct.NbSectors = 1;
+
+		uint32_t PAGEError = 0;
+
+		HAL_FLASH_Unlock();
+		__HAL_FLASH_CLEAR_FLAG(FLASH_FLAG_EOP | FLASH_FLAG_OPERR | FLASH_FLAG_WRPERR | FLASH_FLAG_PGAERR | FLASH_FLAG_PGPERR | FLASH_FLAG_PGSERR);
+		if(HAL_FLASHEx_Erase(&EraseInitStruct, &PAGEError) != HAL_OK) {
+				    //Erase error!
+		}
+
+		Flash_Key_Value_Tree r_tree = Flash_Key_Value_Tree((uint32_t)r1);
+		r_tree.add_edit_key_value(7, 20, (uint8_t*) data);
+		r_tree.reload();
+		r_tree.add_edit_key_value(9, 20, (uint8_t*) data);
+		r_tree.reload();
+		r_tree.add_edit_key_value(1, 20, (uint8_t*) data);
+		r_tree.reload();
+		r_tree.add_edit_key_value(9, 20, (uint8_t*) data);
+		r_tree.reload();
+		r_tree.add_edit_key_value(9, 20, (uint8_t*) data);
+		HAL_FLASH_Lock();
+
+
+	}
 	}
 }
 
