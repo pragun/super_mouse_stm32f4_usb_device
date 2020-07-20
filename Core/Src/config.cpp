@@ -64,6 +64,7 @@ void test_config(uint8_t test){
 		}
 
 		Flash_Key_Value_Tree r_tree = Flash_Key_Value_Tree((uint32_t)r1);
+
 		r_tree.add_edit_key_value(7, 20, (uint8_t*) data);
 		r_tree.reload();
 		r_tree.add_edit_key_value(9, 20, (uint8_t*) data);
@@ -73,13 +74,10 @@ void test_config(uint8_t test){
 		r_tree.add_edit_key_value(9, 20, (uint8_t*) data);
 		r_tree.reload();
 		r_tree.add_edit_key_value(9, 20, (uint8_t*) data);
+		r_tree.reload();
+
 		HAL_FLASH_Lock();
-
-
 	}
 	}
 }
 
-
-//constexpr storage test_struct = storage();
-//[[using gnu : section(".config_sector1") , used]] volatile const storage storage_data = test_struct;

@@ -181,8 +181,10 @@ bool Key_Value_Ram_Node::write_to_address(Node_Address addr){
 	write_addr += header->value_size;
 
 	if(header->flag_state<Validity_Flag_Enum::root_node>()){
-		//The root_link_address doesn't need to be actually written, its best left to 0xFFFFFFFF
 		//retval &= memcpy_to_flash(write_addr, (uint8_t*) &root_link_address, 4);
+		// This line is commented because:
+		// The root_link_address doesn't need to be initialized, its best left to 0xFFFFFFFF
+
 		write_addr += 4;
 	}
 
