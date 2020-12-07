@@ -245,7 +245,7 @@ valid_children_lazyfltr(link_addresses, valid_children_filter_func)
 			break;
 
 		case Link_State_Enum::valid:
-			link_addresses[i] = reinterpret_cast<Node_Address>(link_addr[i]);
+			link_addresses[i] = reinterpret_cast<Node_Address>(link_addr[i-1]);
 			offset += 4;
 			break;
 		}
@@ -278,11 +278,11 @@ const uint32_t Key_Value_Flash_Node::key() const{
 	return header->key;
 }
 
-inline const uint8_t Key_Value_Flash_Node::value_size() const{
+const uint8_t Key_Value_Flash_Node::value_size() const{
 	return header->value_size;
 }
 
-inline const uint8_t* Key_Value_Flash_Node::value() const{
+const uint8_t* Key_Value_Flash_Node::value() const{
 	return data;
 }
 

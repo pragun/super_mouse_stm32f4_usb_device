@@ -1,7 +1,5 @@
 #include <key_value_tree.hpp>
 #include <cstdio>
-#include "reporting_functions.h"
-#include <stack>
 #include <tuple>
 #include <functional>
 #include "stm32f4xx_hal.h"
@@ -28,7 +26,8 @@ Node_Address r1 = (uint32_t) 0x08004000;
 char data[] = "This is a test string";
 uint8_t size = 20;
 
-void test_config(uint8_t test){
+
+void test_config(uint8_t test, void (*traversal_func)(const uint32_t key, const uint8_t len, const uint8_t* data)){
 	switch(test){
 	case 1:
 	{
@@ -77,7 +76,15 @@ void test_config(uint8_t test){
 		r_tree.reload();
 
 		HAL_FLASH_Lock();
+		break;
 	}
+
+	case 4:
+		Flash_Key_Value_Tree r_tree = Flash_Key_Value_Tree((uint32_t)r1);
+		//std::function<void(const uint32_t, const uint8_t, const uint8_t*)> fptr2 = traversal_func;
+		//r_tree.map_with_key_value_function(fptr2);
+		r_tree.map_with_key_value_function2(traversal_func);
+		break;
 	}
 }
 

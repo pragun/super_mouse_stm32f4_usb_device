@@ -1,6 +1,7 @@
 /*
  * mouse_event_handler.cpp
  *
+ *	Edited on: Dec 12,2020
  *  Created on: Jun 13, 2020
  *      Author: Pragun Goyal
  *
@@ -72,6 +73,23 @@ inline Mouse_HID_Report_TypeDef* MouseEventHandler::report_mouse_button_state(Mo
 	return create_or_retreive_default_mouse_hid_report();
 }
 
+void MouseEventHandler::update_key_value(const uint32_t key, const uint8_t size, const uint8_t* data){
+	//this would build a quick lookup index from the values in the Flash
+	asm("nop;");
+}
+
+void MouseEventHandler::dispatch_application_event_type(uint8_t event_type){
+	Keypad_Event_Table* event_table = key_reporting_lookup[current_application_id][tracking_pressed_key];
+	uint8_t event_table_entry_offset = 0;
+	if (event_type != 0){
+		event_table_entry_offset = event_table->entry_offsets[event_type - 1];
+	}
+
+	Keypad_Event_Table_Entry_Typedef* event_table_entry = reinterpret_cast<Keypad_Event_Table_Entry_Typedef*>(&(event_table->payload[event_table_entry_offset]));
+	reporting_function_ptr reporting_func = reporting_function_lookup_table[event_table_entry->reporting_function_index];
+	return (this->*reporting_func)(event_table_entry->parameters);
+}
+
 
 void MouseEventHandler::hid_poll_interval_timer_callback(){
 	mouse_hid_report = nullptr;
@@ -81,8 +99,14 @@ void MouseEventHandler::hid_poll_interval_timer_callback(){
 	}
 
 	if (current_keypad_state != previous_keypad_state){ //There's been a change on the keypad
-		if ((current_keypad_state == 0) && (num_keypad_movements_events_generated == 0)){ // The pressed key has been lifted. This could also be from
+		if ((current_keypad_state == 0) && (num_keypad_movements_events_generated == 0)){
+			// The pressed key has been lifted, and no movement significant
+			// enough to report while the key was down was observed
+			// This means, that it is fine to lookup and report the key_up_event
+			// corresponding to how long was the key pressedReportingEventTypes
+
 			uint32_t a = time_elapsed_ms();
+
 			printf("Time:%d\n",a);
 			stop_timer();
 			tracking_pressed_key = 0; // No longer tracking a key_press
@@ -97,10 +121,15 @@ void MouseEventHandler::hid_poll_interval_timer_callback(){
 		else if (previous_keypad_state == 0){ // A new key has been pressed
 			// Report all un-reported mouse delx,dely,delz
 			report_mouse_movement(mouse_hid_report);
+			//Start KeyPress Timer
 			start_timer();
 			tracking_pressed_key = __builtin_ffs (current_keypad_state);
+
+			// in case there is a key_down_event for this key
+			// release it
+
 			printf("Key Pressed Index:%d\n",tracking_pressed_key);
-			//Start KeyPress Timer
+
 		}
 		else{ //This means that the pressed key has been shifted to a new key
 			//This should be a rare event and is ignored for now
@@ -111,6 +140,9 @@ void MouseEventHandler::hid_poll_interval_timer_callback(){
 	if ((accumulated_mouse_del_x != 0)||(accumulated_mouse_del_y != 0)||(accumulated_scroll_y !=0)){ //Some movement is been accumulated on the mouse
 		if (tracking_pressed_key == 0){ //No keypad key is pressed, this means that the movement can be reported as a regular mouse HID report
 			report_mouse_movement(mouse_hid_report);
+		}
+		else{
+			dispatch_application_event_type(ReportingEventTypes::MOUSE_MOVEMENT);
 		}
 	}
 

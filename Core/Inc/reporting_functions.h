@@ -1,6 +1,15 @@
-#define NUM_KEYS_KEYPAD 12 // 12 keys are standard on most MMO mouse
-#define NUM_EVENT_TYPES_KEYPAD 3 // Short Press, LongPress and Movement
+#define NUM_KEYS_KEYPAD 13 // 12 keys are standard on most MMO mouse. 0 for no key pressed
+#define NUM_EVENT_TYPES_KEYPAD 4 // Key_Press, Short_Press_Release, LongPress_Release and Movement
 #define NUM_APPLICATIONS_KEYPAD 16 // Can store between 16 application specific reporting options
+
+namespace ReportingEventTypes{
+	enum ReportingEventTypes:uint8_t{
+		KEY_DOWN = 0,
+		MOUSE_MOVEMENT,
+		SHORT_PRESS_UP,
+		LONG_PRESS_UP,
+	};
+}
 
 #include <array>
 #include <algorithm>
@@ -35,29 +44,16 @@ namespace ReportingFunctionIndex {
 	};
 }
 
-struct Keypad_Lookup_Redirect_Entry_Typedef{
-	uint8_t redirect_byte;
-	uint8_t __empty__;
-	uint8_t keypad_num;
-	uint8_t application_id;
-};
-
 struct Keypad_Event_Table{
-	uint8_t num_events;
-	uint8_t entry_offsets[];
+	uint8_t entry_offsets[NUM_EVENT_TYPES_KEYPAD-1]; //The event entry boundary for the first one is right at the end of this array
+	uint8_t payload[];
 };
 
-union Keypad_Reporting_Lookup_Entry_Typedef
-{
-	Keypad_Event_Table* evt_table;
-	Keypad_Lookup_Redirect_Entry_Typedef redirect;
-};
 
-template<typename payload>
 struct Keypad_Event_Table_Entry_Typedef {
 	uint8_t reporting_function_index;
 	uint8_t parameter_struct_size;
-	payload parameters;
+	uint8_t parameters[];
 };
 
 

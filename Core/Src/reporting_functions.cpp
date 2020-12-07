@@ -18,13 +18,15 @@ void MouseEventHandler::create_reporting_function_lookup_table(){
 	reporting_function_lookup_table[ReportingFunctionIndex::ABSOLUTE_MOUSE_POSITIION] = &MouseEventHandler::report_absolute_mouse_position;
 	reporting_function_lookup_table[ReportingFunctionIndex::KEYBOARD_PRESS_RELEASE] = &MouseEventHandler::report_keyboard_key_press_release;
 	reporting_function_lookup_table[ReportingFunctionIndex::MOTION_MOD_KEY_PRESS_RELEASE] = &MouseEventHandler::report_movement_mod_as_keys_press_release;
-}
 
-void MouseEventHandler::dont_report_anything(void* b){
 
 }
 
-void MouseEventHandler::report_altered_mouse_movement(void* params){
+void MouseEventHandler::dont_report_anything(uint8_t* b){
+
+}
+
+void MouseEventHandler::report_altered_mouse_movement(uint8_t* params){
 	Altered_Mouse_Movement_Params_Typedef *parameters = (Altered_Mouse_Movement_Params_Typedef*) params;
 	Mouse_HID_Report_TypeDef *report = create_or_retreive_default_mouse_hid_report();
 	if (report != nullptr){
@@ -39,7 +41,7 @@ void MouseEventHandler::report_altered_mouse_movement(void* params){
 	}
 }
 
-void MouseEventHandler::report_absolute_mouse_position(void* params){
+void MouseEventHandler::report_absolute_mouse_position(uint8_t* params){
 	Absolute_Mouse_Params_Typedef *parameters = (Absolute_Mouse_Params_Typedef*) params;
 	Absolute_Mouse_HID_Report_TypeDef *absolute_mouse_hid_report = (Absolute_Mouse_HID_Report_TypeDef*) hid_report_buf.allocate_space_for_report((uint16_t) sizeof(Absolute_Mouse_HID_Report_TypeDef));
 	if (absolute_mouse_hid_report != nullptr){
@@ -51,7 +53,7 @@ void MouseEventHandler::report_absolute_mouse_position(void* params){
 	}
 }
 
-void MouseEventHandler::report_keyboard_key_press_release(void* params){
+void MouseEventHandler::report_keyboard_key_press_release(uint8_t* params){
 	Keyboard_Press_Release_Params_Typedef *parameters = (Keyboard_Press_Release_Params_Typedef*) params;
 
 	//Press Report
@@ -75,7 +77,7 @@ void MouseEventHandler::report_keyboard_key_press_release(void* params){
 	}
 }
 
-void MouseEventHandler::report_movement_mod_as_keys_press_release(void* params){
+void MouseEventHandler::report_movement_mod_as_keys_press_release(uint8_t* params){
 
 }
 

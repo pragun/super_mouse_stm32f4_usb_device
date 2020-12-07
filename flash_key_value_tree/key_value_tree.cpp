@@ -171,7 +171,14 @@ inline void Flash_Key_Value_Tree::map_with_node_function(std::function<void(Key_
 
 void Flash_Key_Value_Tree::map_with_key_value_function(std::function<void(const uint32_t key, const uint8_t size, const uint8_t* value)> func){
 	auto node_function = [func](const Key_Value_Flash_Node &a){
-		func(a.key(), a.value_size(), (const unsigned char*) a.value());
+		func((const uint32_t) a.key(), (const uint8_t) a.value_size(), (const unsigned char*) a.value());
+	};
+	map_with_node_function(node_function);
+}
+
+void Flash_Key_Value_Tree::map_with_key_value_function2(void (*func)(const uint32_t key, const uint8_t size, const uint8_t* value) ){
+	auto node_function = [func](const Key_Value_Flash_Node &a){
+		func((const uint32_t) a.key(), (const uint8_t) a.value_size(), (const unsigned char*) a.value());
 	};
 	map_with_node_function(node_function);
 }
@@ -314,4 +321,3 @@ bool Flash_Key_Value_Tree::add_edit_key_value(uint32_t key, uint8_t size, uint8_
 
 	return false;
 }
-

@@ -65,7 +65,7 @@ private:
 	bool has_first_node_written();
 
 	void map_with_node_function(std::function<void(Key_Value_Flash_Node&)>func);
-	void map_with_key_value_function(std::function<void(const uint32_t key, const uint8_t size, const uint8_t* value)> func);
+
 
 	template <Tree_State TS>
 	bool state();
@@ -74,5 +74,7 @@ public:
 	Flash_Key_Value_Tree(uint32_t address);
 	std::tuple<Node_Address, Node_Address> find_node_and_parent_matching_key(uint32_t key);
 	bool add_edit_key_value(uint32_t key, uint8_t size, uint8_t* value);
+	void map_with_key_value_function(std::function<void(const uint32_t key, const uint8_t size, const uint8_t* value)> func);
+	void map_with_key_value_function2(void (*func)(const uint32_t key, const uint8_t size, const uint8_t* value) );
 	void reload();
 };

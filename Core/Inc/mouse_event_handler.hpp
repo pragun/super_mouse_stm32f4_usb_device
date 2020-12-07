@@ -11,6 +11,8 @@ private:
 	uint16_t tracking_pressed_key = 0; //This is non zero (and equal to the index of the key that was pressed.
 									 //It is set to zero after the key is released
 
+	uint16_t current_application_id = 0;
+
 	bool short_press_duration_passed = false;
 	bool long_press_min_duration_elapsed = false;
 	bool long_press_max_duration_elapsed = false;
@@ -31,18 +33,20 @@ private:
 	Mouse_HID_Report_TypeDef* report_mouse_movement(Mouse_HID_Report_TypeDef*);
 	Mouse_HID_Report_TypeDef* report_mouse_button_state(Mouse_HID_Report_TypeDef*);
 
-	void report_altered_mouse_movement(void* parameters);
-	void report_absolute_mouse_position(void* parameters);
-	void report_keyboard_key_press_release(void* parameters);
-	void report_movement_mod_as_keys_press_release(void* parameters);
-	void dont_report_anything(void* b);
+	void report_altered_mouse_movement(uint8_t* parameters);
+	void report_absolute_mouse_position(uint8_t* parameters);
+	void report_keyboard_key_press_release(uint8_t* parameters);
+	void report_movement_mod_as_keys_press_release(uint8_t* parameters);
+	void dont_report_anything(uint8_t* b);
 
 	void create_reporting_function_lookup_table();
 
-	typedef  void (MouseEventHandler::*reporting_function_ptr)(void *);  // Please do this!
+	void dispatch_application_event_type(uint8_t event_type);
+
+	typedef  void (MouseEventHandler::*reporting_function_ptr)(uint8_t *);  // Please do this!
 	reporting_function_ptr reporting_function_lookup_table[64];
 
-	Keypad_Reporting_Lookup_Entry_Typedef key_reporting_lookup[NUM_APPLICATIONS_KEYPAD][NUM_EVENT_TYPES_KEYPAD][NUM_KEYS_KEYPAD];
+	Keypad_Event_Table* key_reporting_lookup[NUM_APPLICATIONS_KEYPAD][NUM_KEYS_KEYPAD];
 
 public:
 	void (*start_timer)();
@@ -53,5 +57,8 @@ public:
 		start_timer(start_timer), stop_timer(stop_timer), time_elapsed_ms(time_elapsed_ms){};
 
 	void update_state(int16_t dx, int16_t dy, int8_t dz, uint32_t button_state);
+
 	void hid_poll_interval_timer_callback();
+
+	void update_key_value(const uint32_t key, const uint8_t size, const uint8_t* data);
 };

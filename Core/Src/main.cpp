@@ -123,7 +123,7 @@ uint8_t spi_rx_buf[] = "Test Test Test Test Test ";
 UART_Tx_CircularBuffer uart2_tx_buf;
 
 
-extern void test_config(uint8_t test_index);
+extern void test_config(uint8_t test_index, void (*traversal_func)(const uint32_t key, const uint8_t, const uint8_t* data));
 /* USER CODE END PV */
 
 /* Private function prototypes -----------------------------------------------*/
@@ -284,6 +284,10 @@ void HAL_FLASH_EndOfOperationCallback(uint32_t ReturnValue){
 	printf("Flash Value:%x\n",user_config_sector1);
 }*/
 
+void update_key_value_mouse_event_handler(const uint32_t key, const uint8_t size, const uint8_t* data){
+	mouse_event_handler.update_key_value(key, size, data);
+}
+
 
 int main(void)
 {
@@ -352,7 +356,9 @@ int main(void)
 
   //test_config(1);
   //test_config(2);
-  test_config(3);
+
+  test_config(3, &update_key_value_mouse_event_handler);
+  test_config(4, &update_key_value_mouse_event_handler);
 
   while (1)
   {
