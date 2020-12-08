@@ -42,11 +42,11 @@
   * @{
   */
 #define HID_EPIN_ADDR                 0x81U
-#define HID_EPIN_SIZE                 0x16U
-//#define HID_EPIN_SIZE                 0x64U
+//#define HID_EPIN_SIZE                 0x16U
+#define HID_EPIN_SIZE                 0x40U
 
 #define HID_EPOUT_ADDR                0x01U
-#define HID_EPOUT_SIZE                0x17U
+#define HID_EPOUT_SIZE                0x40U
 
 #define USB_HID_CONFIG_DESC_SIZ       34U
 #define USB_HID_DESC_SIZ              9U
