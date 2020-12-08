@@ -13,21 +13,23 @@
 extern HIDContinuousBlockCircularBuffer hid_report_buf;
 
 void MouseEventHandler::create_reporting_function_lookup_table(){
-	reporting_function_lookup_table[ReportingFunctionIndex::NO_REPORT] = &MouseEventHandler::dont_report_anything;
+/*	reporting_function_lookup_table[ReportingFunctionIndex::NO_REPORT] = &MouseEventHandler::dont_report_anything;
 	reporting_function_lookup_table[ReportingFunctionIndex::ALTERED_MOUSE_MOVEMENT] = &MouseEventHandler::report_altered_mouse_movement;
 	reporting_function_lookup_table[ReportingFunctionIndex::ABSOLUTE_MOUSE_POSITIION] = &MouseEventHandler::report_absolute_mouse_position;
 	reporting_function_lookup_table[ReportingFunctionIndex::KEYBOARD_PRESS_RELEASE] = &MouseEventHandler::report_keyboard_key_press_release;
 	reporting_function_lookup_table[ReportingFunctionIndex::MOTION_MOD_KEY_PRESS_RELEASE] = &MouseEventHandler::report_movement_mod_as_keys_press_release;
+	*/
+}
 
+
+template <>
+void MouseEventHandler::reporting_function<ReportingFunctionEnum::NO_REPORT>(uint8_t* params){
 
 }
 
-void MouseEventHandler::dont_report_anything(uint8_t* b){
-
-}
-
-void MouseEventHandler::report_altered_mouse_movement(uint8_t* params){
-	Altered_Mouse_Movement_Params_Typedef *parameters = (Altered_Mouse_Movement_Params_Typedef*) params;
+template <>
+void MouseEventHandler::reporting_function<ReportingFunctionEnum::ALTERED_MOUSE_MOVEMENT>(uint8_t* params){
+	Reporting_Func_Params_Typedef<ReportingFunctionEnum::ALTERED_MOUSE_MOVEMENT> *parameters = (Reporting_Func_Params_Typedef<ReportingFunctionEnum::ALTERED_MOUSE_MOVEMENT>*) params;
 	Mouse_HID_Report_TypeDef *report = create_or_retreive_default_mouse_hid_report();
 	if (report != nullptr){
 		report->mouse_x = accumulated_mouse_del_x * parameters->x_factor;
@@ -41,8 +43,9 @@ void MouseEventHandler::report_altered_mouse_movement(uint8_t* params){
 	}
 }
 
-void MouseEventHandler::report_absolute_mouse_position(uint8_t* params){
-	Absolute_Mouse_Params_Typedef *parameters = (Absolute_Mouse_Params_Typedef*) params;
+template <>
+void MouseEventHandler::reporting_function<ReportingFunctionEnum::ABSOLUTE_MOUSE_POSITIION>(uint8_t* params){
+	Reporting_Func_Params_Typedef<ReportingFunctionEnum::ABSOLUTE_MOUSE_POSITIION> *parameters = (Reporting_Func_Params_Typedef<ReportingFunctionEnum::ABSOLUTE_MOUSE_POSITIION>*) params;
 	Absolute_Mouse_HID_Report_TypeDef *absolute_mouse_hid_report = (Absolute_Mouse_HID_Report_TypeDef*) hid_report_buf.allocate_space_for_report((uint16_t) sizeof(Absolute_Mouse_HID_Report_TypeDef));
 	if (absolute_mouse_hid_report != nullptr){
 		absolute_mouse_hid_report->report_id = 0x03;
@@ -53,8 +56,9 @@ void MouseEventHandler::report_absolute_mouse_position(uint8_t* params){
 	}
 }
 
-void MouseEventHandler::report_keyboard_key_press_release(uint8_t* params){
-	Keyboard_Press_Release_Params_Typedef *parameters = (Keyboard_Press_Release_Params_Typedef*) params;
+template <>
+void MouseEventHandler::reporting_function<ReportingFunctionEnum::KEYBOARD_PRESS_RELEASE>(uint8_t* params){
+	Reporting_Func_Params_Typedef<ReportingFunctionEnum::KEYBOARD_PRESS_RELEASE> *parameters = (Reporting_Func_Params_Typedef<ReportingFunctionEnum::KEYBOARD_PRESS_RELEASE>*) params;
 
 	//Press Report
 	Keyboard_Report_TypeDef *keyboard_report1 = (Keyboard_Report_TypeDef*) hid_report_buf.allocate_space_for_report((uint16_t) sizeof(Keyboard_Report_TypeDef));
@@ -77,7 +81,9 @@ void MouseEventHandler::report_keyboard_key_press_release(uint8_t* params){
 	}
 }
 
-void MouseEventHandler::report_movement_mod_as_keys_press_release(uint8_t* params){
+template <>
+void MouseEventHandler::reporting_function<ReportingFunctionEnum::MOTION_MOD_KEY_PRESS_RELEASE>(uint8_t* params){
+	Reporting_Func_Params_Typedef<ReportingFunctionEnum::MOTION_MOD_KEY_PRESS_RELEASE> *parameters = (Reporting_Func_Params_Typedef<ReportingFunctionEnum::MOTION_MOD_KEY_PRESS_RELEASE>*) params;
 
 }
 

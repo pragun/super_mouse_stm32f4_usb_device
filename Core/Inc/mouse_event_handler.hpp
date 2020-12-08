@@ -48,6 +48,9 @@ private:
 
 	Keypad_Event_Table* key_reporting_lookup[NUM_APPLICATIONS_KEYPAD][NUM_KEYS_KEYPAD];
 
+	template <ReportingFunctionEnum>
+	void reporting_function(uint8_t* params);
+
 public:
 	void (*start_timer)();
 	void (*stop_timer)();

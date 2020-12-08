@@ -43,6 +43,7 @@
   */
 #define HID_EPIN_ADDR                 0x81U
 #define HID_EPIN_SIZE                 0x16U
+//#define HID_EPIN_SIZE                 0x64U
 
 #define HID_EPOUT_ADDR                0x01U
 #define HID_EPOUT_SIZE                0x17U

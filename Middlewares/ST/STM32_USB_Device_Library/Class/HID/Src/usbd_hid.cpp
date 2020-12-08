@@ -482,7 +482,7 @@ static uint8_t USBD_HID_EP0_RxReady(USBD_HandleTypeDef *pdev)
 
   if (hhid->IsReportAvailable == 1U)
   {
-	 PrintHexBuf(hhid->Report_buf, 17);
+	 PrintHexBuf(hhid->Report_buf, 64);
 	//((USBD_CUSTOM_HID_ItfTypeDef *)pdev->pUserData)->OutEvent(hhid->Report_buf[0],
     //                                                         hhid->Report_buf[1]);
     hhid->IsReportAvailable = 0U;
