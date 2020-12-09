@@ -307,6 +307,8 @@ bool Flash_Key_Value_Tree::add_first_root_node(uint32_t key, uint8_t size, uint8
 }
 
 bool Flash_Key_Value_Tree::add_edit_key_value(uint32_t key, uint8_t size, uint8_t* value){
+	flash_unlock();
+
 	if (!has_first_node_written()){
 		return add_first_root_node(key, size, value);
 	}
@@ -318,6 +320,8 @@ bool Flash_Key_Value_Tree::add_edit_key_value(uint32_t key, uint8_t size, uint8_
 		else
 			return add_growth_node_with_key_value(key, size, value);
 	}
+
+	flash_lock();
 
 	return false;
 }
