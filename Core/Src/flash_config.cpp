@@ -3,7 +3,7 @@
 #include <functional>
 #include "stm32f4xx_hal.h"
 
-void flash_unlock(){
+void flash_erase(){
 	FLASH_EraseInitTypeDef EraseInitStruct;
 	EraseInitStruct.VoltageRange = FLASH_VOLTAGE_RANGE_3;
 	EraseInitStruct.TypeErase = FLASH_TYPEERASE_SECTORS;
@@ -17,6 +17,10 @@ void flash_unlock(){
 	if(HAL_FLASHEx_Erase(&EraseInitStruct, &PAGEError) != HAL_OK) {
 			    //Erase error!
 	}
+}
+
+void flash_unlock(){
+	HAL_FLASH_Unlock();
 }
 
 void flash_lock(){
