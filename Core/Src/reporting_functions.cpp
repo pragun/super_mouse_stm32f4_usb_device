@@ -12,24 +12,18 @@
 
 extern HIDContinuousBlockCircularBuffer hid_report_buf;
 
-void MouseEventHandler::create_reporting_function_lookup_table(){
-/*	reporting_function_lookup_table[ReportingFunctionIndex::NO_REPORT] = &MouseEventHandler::dont_report_anything;
-	reporting_function_lookup_table[ReportingFunctionIndex::ALTERED_MOUSE_MOVEMENT] = &MouseEventHandler::report_altered_mouse_movement;
-	reporting_function_lookup_table[ReportingFunctionIndex::ABSOLUTE_MOUSE_POSITIION] = &MouseEventHandler::report_absolute_mouse_position;
-	reporting_function_lookup_table[ReportingFunctionIndex::KEYBOARD_PRESS_RELEASE] = &MouseEventHandler::report_keyboard_key_press_release;
-	reporting_function_lookup_table[ReportingFunctionIndex::MOTION_MOD_KEY_PRESS_RELEASE] = &MouseEventHandler::report_movement_mod_as_keys_press_release;
-	*/
-}
+#define DEF_Reporting_FUNC(Y) template <>\
+auto MouseEventHandler::Reporting_Function<ReportingFunctionEnum::Y>
+
+#define PARAMS_STRUCT(X) Reporting_Func_Params_Typedef<ReportingFunctionEnum::X>
 
 
-template <>
-void MouseEventHandler::Reporting_Function<ReportingFunctionEnum::NO_REPORT>(uint8_t* params){
+DEF_Reporting_FUNC(NO_REPORT)(uint8_t* params)->void {
 
 }
 
-template <>
-void MouseEventHandler::Reporting_Function<ReportingFunctionEnum::ALTERED_MOUSE_MOVEMENT>(uint8_t* params){
-	Reporting_Func_Params_Typedef<ReportingFunctionEnum::ALTERED_MOUSE_MOVEMENT> *parameters = (Reporting_Func_Params_Typedef<ReportingFunctionEnum::ALTERED_MOUSE_MOVEMENT>*) params;
+DEF_Reporting_FUNC(ALTERED_MOUSE_MOVEMENT)(uint8_t* params)->void {
+	PARAMS_STRUCT(ALTERED_MOUSE_MOVEMENT) *parameters = (PARAMS_STRUCT(ALTERED_MOUSE_MOVEMENT)*) params;
 	Mouse_HID_Report_TypeDef *report = create_or_retreive_default_mouse_hid_report();
 	if (report != nullptr){
 		report->mouse_x = accumulated_mouse_del_x * parameters->x_factor;
@@ -43,9 +37,9 @@ void MouseEventHandler::Reporting_Function<ReportingFunctionEnum::ALTERED_MOUSE_
 	}
 }
 
-template <>
-void MouseEventHandler::Reporting_Function<ReportingFunctionEnum::ABSOLUTE_MOUSE_POSITIION>(uint8_t* params){
-	Reporting_Func_Params_Typedef<ReportingFunctionEnum::ABSOLUTE_MOUSE_POSITIION> *parameters = (Reporting_Func_Params_Typedef<ReportingFunctionEnum::ABSOLUTE_MOUSE_POSITIION>*) params;
+DEF_Reporting_FUNC(ABSOLUTE_MOUSE_POSITIION)(uint8_t* params)->void {
+	PARAMS_STRUCT(ABSOLUTE_MOUSE_POSITIION) *parameters = (PARAMS_STRUCT(ABSOLUTE_MOUSE_POSITIION)*) params;
+
 	Absolute_Mouse_HID_Report_TypeDef *absolute_mouse_hid_report = (Absolute_Mouse_HID_Report_TypeDef*) hid_report_buf.allocate_space_for_report((uint16_t) sizeof(Absolute_Mouse_HID_Report_TypeDef));
 	if (absolute_mouse_hid_report != nullptr){
 		absolute_mouse_hid_report->report_id = 0x03;
@@ -56,9 +50,8 @@ void MouseEventHandler::Reporting_Function<ReportingFunctionEnum::ABSOLUTE_MOUSE
 	}
 }
 
-template <>
-void MouseEventHandler::Reporting_Function<ReportingFunctionEnum::KEYBOARD_PRESS_RELEASE>(uint8_t* params){
-	Reporting_Func_Params_Typedef<ReportingFunctionEnum::KEYBOARD_PRESS_RELEASE> *parameters = (Reporting_Func_Params_Typedef<ReportingFunctionEnum::KEYBOARD_PRESS_RELEASE>*) params;
+DEF_Reporting_FUNC(KEYBOARD_PRESS_RELEASE)(uint8_t* params)->void {
+	PARAMS_STRUCT(KEYBOARD_PRESS_RELEASE) *parameters = (PARAMS_STRUCT(KEYBOARD_PRESS_RELEASE)*) params;
 
 	//Press Report
 	Keyboard_Report_TypeDef *keyboard_report1 = (Keyboard_Report_TypeDef*) hid_report_buf.allocate_space_for_report((uint16_t) sizeof(Keyboard_Report_TypeDef));
@@ -81,9 +74,7 @@ void MouseEventHandler::Reporting_Function<ReportingFunctionEnum::KEYBOARD_PRESS
 	}
 }
 
-template <>
-void MouseEventHandler::Reporting_Function<ReportingFunctionEnum::MOTION_MOD_KEY_PRESS_RELEASE>(uint8_t* params){
-	Reporting_Func_Params_Typedef<ReportingFunctionEnum::MOTION_MOD_KEY_PRESS_RELEASE> *parameters = (Reporting_Func_Params_Typedef<ReportingFunctionEnum::MOTION_MOD_KEY_PRESS_RELEASE>*) params;
-
+DEF_Reporting_FUNC(MOTION_MOD_KEY_PRESS_RELEASE)(uint8_t* params)->void {
+	PARAMS_STRUCT(MOTION_MOD_KEY_PRESS_RELEASE) *parameters = (PARAMS_STRUCT(MOTION_MOD_KEY_PRESS_RELEASE)*) params;
 }
 

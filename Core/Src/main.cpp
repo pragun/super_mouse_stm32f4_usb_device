@@ -266,7 +266,7 @@ void Enable_Flash_Interrupts_NVIC(){
 
 
 void update_key_value_mouse_event_handler(const uint32_t key, const uint8_t size, const uint8_t* data){
-	mouse_event_handler.update_key_value(key, size, data);
+	mouse_event_handler.register_config_entry(key, size, data);
 }
 
 void HandleHIDOutputMsg(const uint8_t* buf, uint8_t size){

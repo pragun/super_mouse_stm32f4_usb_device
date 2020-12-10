@@ -16,7 +16,7 @@ public:
 
 	void hid_poll_interval_timer_callback();
 
-	void update_key_value(const uint32_t key, const uint8_t size, const uint8_t* data);
+	void register_config_entry(const uint32_t key, const uint8_t size, const uint8_t* data);
 
 private:
 	// State Flags
@@ -47,14 +47,6 @@ private:
 	Mouse_HID_Report_TypeDef* create_or_retreive_default_mouse_hid_report();
 	Mouse_HID_Report_TypeDef* report_mouse_movement(Mouse_HID_Report_TypeDef*);
 	Mouse_HID_Report_TypeDef* report_mouse_button_state(Mouse_HID_Report_TypeDef*);
-
-	void report_altered_mouse_movement(uint8_t* parameters);
-	void report_absolute_mouse_position(uint8_t* parameters);
-	void report_keyboard_key_press_release(uint8_t* parameters);
-	void report_movement_mod_as_keys_press_release(uint8_t* parameters);
-	void dont_report_anything(uint8_t* b);
-
-	void create_reporting_function_lookup_table();
 
 	void dispatch_application_event_type(uint8_t event_type);
 

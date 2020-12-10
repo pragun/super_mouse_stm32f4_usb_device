@@ -93,9 +93,12 @@ inline Mouse_HID_Report_TypeDef* MouseEventHandler::report_mouse_button_state(Mo
 	return create_or_retreive_default_mouse_hid_report();
 }
 
-void MouseEventHandler::update_key_value(const uint32_t key, const uint8_t size, const uint8_t* data){
-	//this would build a quick lookup index from the values in the Flash
-	asm("nop;");
+void MouseEventHandler::register_config_entry(const uint32_t key, const uint8_t size, const uint8_t* data){
+	uint8_t application_id = key & (0xFF << 8);
+	uint8_t keypad_key =  key & (0xFF);
+	if ((application_id <NUM_APPLICATIONS_KEYPAD) && (keypad_key < NUM_EVENT_TYPES_KEYPAD)){
+		event_handler_table[application_id][keypad_key] = (Keypad_Event_Table*) data;
+	}
 }
 
 void MouseEventHandler::dispatch_application_event_type(uint8_t event_type){
