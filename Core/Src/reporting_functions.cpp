@@ -23,12 +23,12 @@ void MouseEventHandler::create_reporting_function_lookup_table(){
 
 
 template <>
-void MouseEventHandler::reporting_function<ReportingFunctionEnum::NO_REPORT>(uint8_t* params){
+void MouseEventHandler::Reporting_Function<ReportingFunctionEnum::NO_REPORT>(uint8_t* params){
 
 }
 
 template <>
-void MouseEventHandler::reporting_function<ReportingFunctionEnum::ALTERED_MOUSE_MOVEMENT>(uint8_t* params){
+void MouseEventHandler::Reporting_Function<ReportingFunctionEnum::ALTERED_MOUSE_MOVEMENT>(uint8_t* params){
 	Reporting_Func_Params_Typedef<ReportingFunctionEnum::ALTERED_MOUSE_MOVEMENT> *parameters = (Reporting_Func_Params_Typedef<ReportingFunctionEnum::ALTERED_MOUSE_MOVEMENT>*) params;
 	Mouse_HID_Report_TypeDef *report = create_or_retreive_default_mouse_hid_report();
 	if (report != nullptr){
@@ -44,7 +44,7 @@ void MouseEventHandler::reporting_function<ReportingFunctionEnum::ALTERED_MOUSE_
 }
 
 template <>
-void MouseEventHandler::reporting_function<ReportingFunctionEnum::ABSOLUTE_MOUSE_POSITIION>(uint8_t* params){
+void MouseEventHandler::Reporting_Function<ReportingFunctionEnum::ABSOLUTE_MOUSE_POSITIION>(uint8_t* params){
 	Reporting_Func_Params_Typedef<ReportingFunctionEnum::ABSOLUTE_MOUSE_POSITIION> *parameters = (Reporting_Func_Params_Typedef<ReportingFunctionEnum::ABSOLUTE_MOUSE_POSITIION>*) params;
 	Absolute_Mouse_HID_Report_TypeDef *absolute_mouse_hid_report = (Absolute_Mouse_HID_Report_TypeDef*) hid_report_buf.allocate_space_for_report((uint16_t) sizeof(Absolute_Mouse_HID_Report_TypeDef));
 	if (absolute_mouse_hid_report != nullptr){
@@ -57,7 +57,7 @@ void MouseEventHandler::reporting_function<ReportingFunctionEnum::ABSOLUTE_MOUSE
 }
 
 template <>
-void MouseEventHandler::reporting_function<ReportingFunctionEnum::KEYBOARD_PRESS_RELEASE>(uint8_t* params){
+void MouseEventHandler::Reporting_Function<ReportingFunctionEnum::KEYBOARD_PRESS_RELEASE>(uint8_t* params){
 	Reporting_Func_Params_Typedef<ReportingFunctionEnum::KEYBOARD_PRESS_RELEASE> *parameters = (Reporting_Func_Params_Typedef<ReportingFunctionEnum::KEYBOARD_PRESS_RELEASE>*) params;
 
 	//Press Report
@@ -82,7 +82,7 @@ void MouseEventHandler::reporting_function<ReportingFunctionEnum::KEYBOARD_PRESS
 }
 
 template <>
-void MouseEventHandler::reporting_function<ReportingFunctionEnum::MOTION_MOD_KEY_PRESS_RELEASE>(uint8_t* params){
+void MouseEventHandler::Reporting_Function<ReportingFunctionEnum::MOTION_MOD_KEY_PRESS_RELEASE>(uint8_t* params){
 	Reporting_Func_Params_Typedef<ReportingFunctionEnum::MOTION_MOD_KEY_PRESS_RELEASE> *parameters = (Reporting_Func_Params_Typedef<ReportingFunctionEnum::MOTION_MOD_KEY_PRESS_RELEASE>*) params;
 
 }

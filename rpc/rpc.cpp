@@ -40,16 +40,16 @@ constexpr RPC::RPC_fptr RPC::get_fptr_from_idx(){
 }
 
 template <size_t... Indices>
-constexpr std::array<RPC::RPC_fptr, RPC::MAX_RPC_FUNCS>
+constexpr std::array<RPC::RPC_fptr, RPC::NUM_RPC_FUNCS>
 RPC::func_idx_helper(std::index_sequence<Indices...>) {
     return { get_fptr_from_idx<Indices>()... };
 }
 
-constexpr std::array<RPC::RPC_fptr, RPC::MAX_RPC_FUNCS>
+constexpr std::array<RPC::RPC_fptr, RPC::NUM_RPC_FUNCS>
 RPC::func_idx_builder() {
     return func_idx_helper(
         // make the sequence type sequence<0, 1, 2, ..., N-1>
-        std::make_index_sequence<MAX_RPC_FUNCS>{}
+        std::make_index_sequence<NUM_RPC_FUNCS>{}
         );
 }
 

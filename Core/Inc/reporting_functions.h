@@ -1,6 +1,15 @@
 #include <array>
 #include <algorithm>
 
+#define NUMARGS(...)  (sizeof((int[]){__VA_ARGS__})/sizeof(int))
+
+#define SequentialEnum(Name,...) \
+enum Name { __VA_ARGS__ }; \
+namespace \
+{ \
+    constexpr std::array<Name, NUMARGS(__VA_ARGS__)> Name##List { __VA_ARGS__ }; \
+};
+
 #define NUM_KEYS_KEYPAD 13 // 12 keys are standard on most MMO mouse. 0 for no key pressed
 #define NUM_EVENT_TYPES_KEYPAD 4 // Key_Press, Short_Press_Release, LongPress_Release and Movement
 #define NUM_APPLICATIONS_KEYPAD 16 // Can store between 16 application specific reporting options
@@ -14,13 +23,13 @@ namespace ReportingEventTypes{
 	};
 }
 
-enum ReportingFunctionEnum : uint8_t {
-	NO_REPORT = 0,
+SequentialEnum(ReportingFunctionEnum,
+	NO_REPORT,
 	ALTERED_MOUSE_MOVEMENT,
 	ABSOLUTE_MOUSE_POSITIION,
 	KEYBOARD_PRESS_RELEASE,
 	MOTION_MOD_KEY_PRESS_RELEASE,
-};
+);
 
 template <ReportingFunctionEnum>
 struct Reporting_Func_Params_Typedef{

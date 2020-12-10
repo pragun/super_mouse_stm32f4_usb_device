@@ -3,6 +3,21 @@
 #include "reporting_functions.h"
 
 class MouseEventHandler {
+public:
+	void (*start_timer)();
+	void (*stop_timer)();
+	uint32_t (*time_elapsed_ms)();
+
+	constexpr static uint8_t NUM_REPORTING_FUNCS = ReportingFunctionEnumList.size();
+
+	MouseEventHandler(void (*stop_timer)(), void (*start_timer)(), uint32_t (*time_elapsed_ms)());
+
+	void update_state(int16_t dx, int16_t dy, int8_t dz, uint32_t button_state);
+
+	void hid_poll_interval_timer_callback();
+
+	void update_key_value(const uint32_t key, const uint8_t size, const uint8_t* data);
+
 private:
 	// State Flags
 	bool movement_event_generated = false;
@@ -43,25 +58,21 @@ private:
 
 	void dispatch_application_event_type(uint8_t event_type);
 
-	typedef  void (MouseEventHandler::*reporting_function_ptr)(uint8_t *);  // Please do this!
-	reporting_function_ptr reporting_function_lookup_table[64];
+	typedef  void (MouseEventHandler::*Rprting_Fptr)(uint8_t *);  // Please do this!
+	std::array<Rprting_Fptr,NUM_REPORTING_FUNCS> reporting_function_table;
 
-	Keypad_Event_Table* key_reporting_lookup[NUM_APPLICATIONS_KEYPAD][NUM_KEYS_KEYPAD];
+	Keypad_Event_Table* event_handler_table[NUM_APPLICATIONS_KEYPAD][NUM_KEYS_KEYPAD];
 
 	template <ReportingFunctionEnum>
-	void reporting_function(uint8_t* params);
+	void Reporting_Function(uint8_t* params);
 
-public:
-	void (*start_timer)();
-	void (*stop_timer)();
-	uint32_t (*time_elapsed_ms)();
+	static constexpr std::array<MouseEventHandler::Rprting_Fptr, MouseEventHandler::NUM_REPORTING_FUNCS>
+	func_idx_builder();
 
-	MouseEventHandler(void (*stop_timer)(), void (*start_timer)(), uint32_t (*time_elapsed_ms)()):
-		start_timer(start_timer), stop_timer(stop_timer), time_elapsed_ms(time_elapsed_ms){};
+	template <size_t... Indices>
+	static constexpr std::array<MouseEventHandler::Rprting_Fptr, MouseEventHandler::NUM_REPORTING_FUNCS>
+	func_idx_helper(std::index_sequence<Indices...>);
 
-	void update_state(int16_t dx, int16_t dy, int8_t dz, uint32_t button_state);
-
-	void hid_poll_interval_timer_callback();
-
-	void update_key_value(const uint32_t key, const uint8_t size, const uint8_t* data);
+	template<uint8_t idx>
+	static constexpr Rprting_Fptr get_fptr_from_idx();
 };

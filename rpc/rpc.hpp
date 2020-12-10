@@ -17,7 +17,7 @@ SequentialEnum(RPC_Function_Enum,
 
 class RPC{
 public:
-	constexpr static uint8_t MAX_RPC_FUNCS = RPC_Function_EnumList.size();
+	constexpr static uint8_t NUM_RPC_FUNCS = RPC_Function_EnumList.size();
 
 	void Handle_RPC(const uint8_t*);
 	RPC(Flash_Key_Value_Tree* flash_key_value_tree);
@@ -31,16 +31,16 @@ private:
 	template <RPC_Function_Enum T>
 	void RPC_Function(const uint8_t*);
 
-	static constexpr std::array<RPC::RPC_fptr, RPC::MAX_RPC_FUNCS>
+	static constexpr std::array<RPC::RPC_fptr, RPC::NUM_RPC_FUNCS>
 	func_idx_builder();
 
 	template <size_t... Indices>
-	static constexpr std::array<RPC::RPC_fptr, RPC::MAX_RPC_FUNCS>
+	static constexpr std::array<RPC::RPC_fptr, RPC::NUM_RPC_FUNCS>
 	func_idx_helper(std::index_sequence<Indices...>);
 
 	template<uint8_t idx>
 	static constexpr RPC_fptr get_fptr_from_idx();
 
-	std::array<RPC_fptr, MAX_RPC_FUNCS> func_list;
+	std::array<RPC_fptr, NUM_RPC_FUNCS> func_list;
 
 };

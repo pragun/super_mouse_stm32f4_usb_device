@@ -20,6 +20,26 @@ uint16_t movement_event_max_start_interval = 100; 	// .. the user must start mov
 HIDContinuousBlockCircularBuffer hid_report_buf;
 // The KeyPadHandler is called by SPI Mouse RX when a KeyPad change is seen
 
+template<uint8_t idx>
+constexpr MouseEventHandler::Rprting_Fptr MouseEventHandler::get_fptr_from_idx(){
+	return &MouseEventHandler::Reporting_Function<static_cast<ReportingFunctionEnum>(idx)>;
+}
+
+template <size_t... Indices>
+constexpr std::array<MouseEventHandler::Rprting_Fptr, MouseEventHandler::NUM_REPORTING_FUNCS>
+MouseEventHandler::func_idx_helper(std::index_sequence<Indices...>) {
+    return { get_fptr_from_idx<Indices>()... };
+}
+
+constexpr std::array<MouseEventHandler::Rprting_Fptr, MouseEventHandler::NUM_REPORTING_FUNCS>
+MouseEventHandler::func_idx_builder() {
+    return func_idx_helper(
+        // make the sequence type sequence<0, 1, 2, ..., N-1>
+        std::make_index_sequence<NUM_REPORTING_FUNCS>{}
+        );
+}
+
+
 void MouseEventHandler::update_state(int16_t dx, int16_t dy, int8_t dz, uint32_t button_state){
 	accumulated_mouse_del_x += dx;
 	accumulated_mouse_del_y += dy;
@@ -79,14 +99,14 @@ void MouseEventHandler::update_key_value(const uint32_t key, const uint8_t size,
 }
 
 void MouseEventHandler::dispatch_application_event_type(uint8_t event_type){
-	Keypad_Event_Table* event_table = key_reporting_lookup[current_application_id][tracking_pressed_key];
+	Keypad_Event_Table* event_table = event_handler_table[current_application_id][tracking_pressed_key];
 	uint8_t event_table_entry_offset = 0;
 	if (event_type != 0){
 		event_table_entry_offset = event_table->entry_offsets[event_type - 1];
 	}
 
 	Keypad_Event_Table_Entry_Typedef* event_table_entry = reinterpret_cast<Keypad_Event_Table_Entry_Typedef*>(&(event_table->payload[event_table_entry_offset]));
-	reporting_function_ptr reporting_func = reporting_function_lookup_table[event_table_entry->reporting_function_index];
+	Rprting_Fptr reporting_func = reporting_function_table[event_table_entry->reporting_function_index];
 	return (this->*reporting_func)(event_table_entry->parameters);
 }
 
@@ -159,3 +179,8 @@ void MouseEventHandler::hid_poll_interval_timer_callback(){
 	USB_HID_Send_Next_Report(&hUsbDeviceFS);
 }
 
+MouseEventHandler::MouseEventHandler(void (*stop_timer)(), void (*start_timer)(), uint32_t (*time_elapsed_ms)()):
+				start_timer(start_timer),
+				stop_timer(stop_timer),
+				time_elapsed_ms(time_elapsed_ms),
+				reporting_function_table(MouseEventHandler::func_idx_builder()){};
