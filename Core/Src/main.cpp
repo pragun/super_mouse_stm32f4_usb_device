@@ -26,8 +26,8 @@
 #include "usbd_hid.h"
 #include "mouse_event_handler.hpp"
 #include "circular_buffers.hpp"
-#include "hid_rpc.hpp"
 #include "key_value_tree.hpp"
+#include "rpc.hpp"
 
 
 /* Private includes ----------------------------------------------------------*/
@@ -178,7 +178,7 @@ Flash_Key_Value_Tree r_tree = Flash_Key_Value_Tree((uint32_t)flash_config_tree_r
 
 MouseEventHandler mouse_event_handler(&stop_keypress_timer, &start_keypress_timer, &read_keypress_time_ms);
 
-HID_RPC hid_rpc_obj = HID_RPC(&r_tree);
+RPC hid_rpc_obj = RPC(&r_tree);
 
 
 void spi_rx_complete(SPI_HandleTypeDef *hspi){
@@ -271,7 +271,7 @@ void update_key_value_mouse_event_handler(const uint32_t key, const uint8_t size
 
 void HandleHIDOutputMsg(const uint8_t* buf, uint8_t size){
 	PrintHexBuf(const_cast<uint8_t*>(buf), size);
-	hid_rpc_obj.Handle_HID_RPC(buf);
+	hid_rpc_obj.Handle_RPC(buf);
 }
 
 int main(void)
