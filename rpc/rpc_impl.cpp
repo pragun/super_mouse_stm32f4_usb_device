@@ -3,7 +3,7 @@
 //Uses the trailing type delcaration format to leave the most flexibility to the user
 #define DEF_RPC_FUNC(Y) template<>\
 template <>\
-auto RPC<RPC_Function_Enum, num_rpc_impl_funcs>::RPC_Function<RPC_Function_Enum::Y>
+auto RPC<RPC_State_Data, RPC_Function_Enum, num_rpc_impl_funcs>::RPC_Function<RPC_Function_Enum::Y>
 
 
 DEF_RPC_FUNC(DO_NOTHING)(const uint8_t* buf)->void{
@@ -20,8 +20,8 @@ DEF_RPC_FUNC(WRITE_KEY_SIZE_VALUE_TO_FLASH)(const uint8_t* buf)->void{
 
 	const key_size_value* ksv = reinterpret_cast<const key_size_value*>(buf);
 
-	flash_key_value_tree->add_edit_key_value(ksv->key, ksv->size, const_cast<uint8_t*>(ksv->value));
-	flash_key_value_tree->reload();
+	state_data.flash_key_value_tree->add_edit_key_value(ksv->key, ksv->size, const_cast<uint8_t*>(ksv->value));
+	state_data.flash_key_value_tree->reload();
 }
 
 DEF_RPC_FUNC(ERASE_FLASH_SECTOR)(const uint8_t* buf)->void{
@@ -159,4 +159,4 @@ key_size_value_flash convert_cfg_entry_to_key_size_value(Cfg_Serialized_Entry_Ty
 
 	*/
 
-template class RPC<RPC_Function_Enum, num_rpc_impl_funcs>;
+template class RPC<RPC_State_Data, RPC_Function_Enum, num_rpc_impl_funcs>;

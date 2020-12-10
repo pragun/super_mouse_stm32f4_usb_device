@@ -1,4 +1,5 @@
 #import "rpc.hpp"
+#import "key_value_tree.hpp"
 #import "reporting_functions.h"
 
 
@@ -19,3 +20,6 @@ SequentialEnum(RPC_Function_Enum,
 
 constexpr uint8_t num_rpc_impl_funcs = RPC_Function_EnumList.size();
 
+struct RPC_State_Data{
+	Flash_Key_Value_Tree* flash_key_value_tree;
+};
