@@ -1,7 +1,5 @@
 #import "key_value_tree.hpp"
 
-#import <functional>
-
 #define NUMARGS(...)  (sizeof((int[]){__VA_ARGS__})/sizeof(int))
 
 #define SequentialEnum(Name,...) \

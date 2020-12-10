@@ -1,13 +1,17 @@
 #include "functional"
 #include "rpc.hpp"
 
-template <>
-void RPC::RPC_Function<RPC_Function_Enum::DO_NOTHING>(const uint8_t* buf){
+
+//Uses the trailing type delcaration format to leave the most flexibility to the user
+#define DEF_RPC_FUNC(Y) template <>\
+auto RPC::RPC_Function<RPC_Function_Enum::Y>
+
+
+DEF_RPC_FUNC(DO_NOTHING)(const uint8_t* buf)->void{
 
 }
 
-template <>
-void RPC::RPC_Function<RPC_Function_Enum::WRITE_KEY_SIZE_VALUE_TO_FLASH>(const uint8_t* buf){
+DEF_RPC_FUNC(WRITE_KEY_SIZE_VALUE_TO_FLASH)(const uint8_t* buf)->void{
 	#pragma pack(1)
 	struct key_size_value{
 		uint32_t key;
@@ -20,8 +24,7 @@ void RPC::RPC_Function<RPC_Function_Enum::WRITE_KEY_SIZE_VALUE_TO_FLASH>(const u
 	flash_key_value_tree->reload();
 }
 
-template <>
-void RPC::RPC_Function<RPC_Function_Enum::ERASE_FLASH_SECTOR>(const uint8_t* buf){
+DEF_RPC_FUNC(ERASE_FLASH_SECTOR)(const uint8_t* buf)->void{
 
 }
 
