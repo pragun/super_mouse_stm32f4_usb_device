@@ -9,6 +9,7 @@ using useless_type = int;
 extern void flash_lock();
 extern void flash_unlock();
 
+
 enum class Traversal_Type {fold, search, map};
 
 template <typename FT>
