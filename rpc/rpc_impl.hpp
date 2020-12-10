@@ -23,3 +23,5 @@ constexpr uint8_t num_rpc_impl_funcs = RPC_Function_EnumList.size();
 struct RPC_State_Data{
 	Flash_Key_Value_Tree* flash_key_value_tree;
 };
+
+using RPC_Impl = RPC<RPC_State_Data, RPC_Function_Enum, num_rpc_impl_funcs>;

@@ -178,7 +178,7 @@ Flash_Key_Value_Tree r_tree = Flash_Key_Value_Tree((uint32_t)flash_config_tree_r
 
 MouseEventHandler mouse_event_handler(&stop_keypress_timer, &start_keypress_timer, &read_keypress_time_ms);
 
-auto hid_rpc_obj = RPC<RPC_State_Data, RPC_Function_Enum, num_rpc_impl_funcs>({.flash_key_value_tree=&r_tree});
+auto hid_rpc_obj = RPC_Impl({.flash_key_value_tree=&r_tree});
 
 
 void spi_rx_complete(SPI_HandleTypeDef *hspi){
