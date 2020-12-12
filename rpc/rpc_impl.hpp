@@ -1,6 +1,6 @@
-#import "rpc.hpp"
-#import "key_value_tree.hpp"
-#import "reporting_functions.h"
+#include "rpc.hpp"
+#include "key_value_tree.hpp"
+#include "reporting_functions.h"
 
 
 #define NUMARGS(...)  (sizeof((int[]){__VA_ARGS__})/sizeof(int))

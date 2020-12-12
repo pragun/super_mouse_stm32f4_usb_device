@@ -8,7 +8,7 @@
 #include "usb_device.h"
 #include "usbd_hid.h"
 #include "mouse_event_handler.hpp"
-#include "../../circular_buffer/circular_buffers.hpp"
+#include "circular_buffers.hpp"
 
 extern HIDContinuousBlockCircularBuffer hid_report_buf;
 

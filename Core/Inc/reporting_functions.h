@@ -1,6 +1,12 @@
+#pragma once
 #include <array>
 #include <algorithm>
 
+#ifdef _MSC_VER
+#define SequentialEnum(Name,...) \
+enum Name { __VA_ARGS__ }; \
+
+#else
 #define NUMARGS(...)  (sizeof((int[]){__VA_ARGS__})/sizeof(int))
 
 #define SequentialEnum(Name,...) \
@@ -9,6 +15,7 @@ namespace \
 { \
     constexpr std::array<Name, NUMARGS(__VA_ARGS__)> Name##List { __VA_ARGS__ }; \
 };
+#endif
 
 #define NUM_KEYS_KEYPAD 13 // 12 keys are standard on most MMO mouse. 0 for no key pressed
 #define NUM_EVENT_TYPES_KEYPAD 4 // Key_Press, Short_Press_Release, LongPress_Release and Movement
@@ -77,7 +84,7 @@ struct Reporting_Func_Params_Typedef<ReportingFunctionEnum::MOTION_MOD_KEY_PRESS
 struct empty_struct{};
 
 struct Keypad_Event_Table{
-	uint8_t entry_offsets[NUM_EVENT_TYPES_KEYPAD-1]; //The event entry boundary for the first one is right at the end of this array
+	uint8_t entry_offsets[NUM_EVENT_TYPES_KEYPAD]; //The event entry boundary for the first one is right at the end of this array
 	uint8_t payload[];
 };
 
@@ -86,5 +93,4 @@ struct Keypad_Event_Table_Entry_Typedef {
 	uint8_t parameter_struct_size;
 	uint8_t parameters[];
 };
-
 
