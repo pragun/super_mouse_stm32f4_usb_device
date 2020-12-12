@@ -339,7 +339,7 @@ int main(void)
   uint64_t Data = 0x00000000FFFFFFFF;
   uint8_t i = 0;
 
-  //r_tree.map_with_key_value_function(update_key_value_mouse_event_handler);
+  r_tree.map_with_key_value_function(update_key_value_mouse_event_handler);
 
   while (1)
   {

@@ -85,29 +85,32 @@ void Flash_Key_Value_Tree::reload(){
 
 template <typename T>
 typename traversal_types<T>::return_t Flash_Key_Value_Tree::traverse_with_node_function(typename traversal_types<T>::func func, typename traversal_types<T>::accumulator value){
-	std::stack<std::tuple<Node_Address,Node_Address>> traversal_stack;
-	traversal_stack.push(std::make_tuple(root_node_addr,0));
+	if(has_first_node_written()){
 
-	while(!traversal_stack.empty()){
-		auto [node_addr,parent_addr] = traversal_stack.top();
-		traversal_stack.pop();
+		std::stack<std::tuple<Node_Address,Node_Address>> traversal_stack;
+		traversal_stack.push(std::make_tuple(root_node_addr,0));
 
-		Key_Value_Flash_Node a = Key_Value_Flash_Node::read_node_from_flash(node_addr);
+		while(!traversal_stack.empty()){
+			auto [node_addr,parent_addr] = traversal_stack.top();
+			traversal_stack.pop();
 
-		if constexpr (traversal_types<T>::handling == Traversal_Type::fold)
-						value = func(a,value);
+			Key_Value_Flash_Node a = Key_Value_Flash_Node::read_node_from_flash(node_addr);
 
-		if constexpr (traversal_types<T>::handling == Traversal_Type::map)
-						func(a);
+			if constexpr (traversal_types<T>::handling == Traversal_Type::fold)
+							value = func(a,value);
 
-		if constexpr (traversal_types<T>::handling == Traversal_Type::search)
-						if(func(a)){
-							return std::make_tuple(node_addr, parent_addr);
-						};
+			if constexpr (traversal_types<T>::handling == Traversal_Type::map)
+							func(a);
 
-		for(Nodes_Filter valid_children_links = a.valid_children_links(); !valid_children_links.reached_end(); ++valid_children_links){
-			Node_Address child_node_addr = valid_children_links.value();
-			traversal_stack.push(std::make_tuple(child_node_addr,node_addr));
+			if constexpr (traversal_types<T>::handling == Traversal_Type::search)
+							if(func(a)){
+								return std::make_tuple(node_addr, parent_addr);
+							};
+
+			for(Nodes_Filter valid_children_links = a.valid_children_links(); !valid_children_links.reached_end(); ++valid_children_links){
+				Node_Address child_node_addr = valid_children_links.value();
+				traversal_stack.push(std::make_tuple(child_node_addr,node_addr));
+			}
 		}
 	}
 
