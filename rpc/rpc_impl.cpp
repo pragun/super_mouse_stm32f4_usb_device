@@ -6,6 +6,8 @@ template <>\
 auto RPC<RPC_State_Data, RPC_Function_Enum, num_rpc_impl_funcs>::RPC_Function<RPC_Function_Enum::Y>
 
 
+extern void flash_erase();
+
 DEF_RPC_FUNC(DO_NOTHING)(const uint8_t* buf)->void{
 
 }
@@ -25,7 +27,7 @@ DEF_RPC_FUNC(WRITE_KEY_SIZE_VALUE_TO_FLASH)(const uint8_t* buf)->void{
 }
 
 DEF_RPC_FUNC(ERASE_FLASH_SECTOR)(const uint8_t* buf)->void{
-
+	flash_erase();
 }
 
 	/* Some other previously tried configuration DSL prototypes

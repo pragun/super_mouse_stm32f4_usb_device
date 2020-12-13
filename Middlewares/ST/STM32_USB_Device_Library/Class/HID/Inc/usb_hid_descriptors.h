@@ -241,7 +241,7 @@ __ALIGN_BEGIN static uint8_t HID_MOUSE_ReportDesc[HID_MOUSE_REPORT_DESC_SIZE]  _
 	0x25, 0x01,        //   Logical Maximum (1)
 	0x81, 0x02,        //   Input (Data,Var,Abs,No Wrap,Linear,Preferred State,No Null Position)
 
-	0x95, 0x04,        //   Report Count (4)
+	0x95, 0x03,        //   Report Count (4)
 	0x75, 0x08,        //   Report Size (8)
 	0x15, 0x00,        //   Logical Minimum (0)
 	0x25, 0xE7,        //   Logical Maximum (100)
