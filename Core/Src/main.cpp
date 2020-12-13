@@ -25,7 +25,9 @@
 #include "usb_device.h"
 #include "usbd_hid.h"
 #include "mouse_event_handler.hpp"
-#include "../../circular_buffer/circular_buffers.hpp"
+#include "circular_buffers.hpp"
+#include "key_value_tree.hpp"
+#include "rpc_impl.hpp"
 
 
 /* Private includes ----------------------------------------------------------*/
@@ -123,6 +125,7 @@ uint8_t spi_rx_buf[] = "Test Test Test Test Test ";
 UART_Tx_CircularBuffer uart2_tx_buf;
 
 
+extern void test_config(uint8_t test_index, void (*traversal_func)(const uint32_t key, const uint8_t, const uint8_t* data));
 /* USER CODE END PV */
 
 /* Private function prototypes -----------------------------------------------*/
@@ -169,13 +172,14 @@ uint32_t read_keypress_time_ms(){
 }
 
 
+Node_Address flash_config_tree_root_addr = (uint32_t) 0x08004000;
+
+Flash_Key_Value_Tree r_tree = Flash_Key_Value_Tree((uint32_t)flash_config_tree_root_addr);
+
 MouseEventHandler mouse_event_handler(&stop_keypress_timer, &start_keypress_timer, &read_keypress_time_ms);
 
-/*void HAL_GPIO_EXTI_Callback(uint16_t GPIO_Pin)
-{
-	gpio_pa8_interrupt_count ++ ;
-	printf("GPIO Interrupt received.\r\n");
-}*/
+auto hid_rpc_obj = RPC_Impl({.flash_key_value_tree=&r_tree});
+
 
 void spi_rx_complete(SPI_HandleTypeDef *hspi){
 	spi_rx_count ++ ;
@@ -228,14 +232,6 @@ void timer10_period_elapsed(TIM_HandleTypeDef *htim){
 			HAL_UART_Transmit_DMA(&huart2,(uint8_t*) tx_buf, tx_count);
 		}
 	}
-
-	/*if ((uart2_tx_buf.length_of_ongoing_transmission() == 0) && (uart2_tx_buf.length_of_queue() > 0)){
-		auto tt = HAL_DMA_GetState(&hdma_usart2_tx);
-		auto [ tx_buf, tx_count ] = uart2_tx_buf.longest_possible_send();
-		HAL_UART_Transmit_DMA(&huart2,(uint8_t*) tx_buf, tx_count);
-		asm("nop;");
-	}*/
-
 }
 
 
@@ -262,27 +258,21 @@ int _write(int file, char *ptr, int len)
 	return len;
 }
 
-extern void check_on_config();
-
-
-/* USER CODE END 0 */
-
-/**
-  * @brief  The application entry point.
-  * @retval int
-  */
 
 void Enable_Flash_Interrupts_NVIC(){
 	  HAL_NVIC_SetPriority(FLASH_IRQn, 0, 0);
 	  HAL_NVIC_EnableIRQ(FLASH_IRQn);
 }
 
-/*
-void HAL_FLASH_EndOfOperationCallback(uint32_t ReturnValue){
-	printf("Finished write operation, return value:%x\n",ReturnValue);
-	printf("Flash Value:%x\n",user_config_sector1);
-}*/
 
+void update_key_value_mouse_event_handler(const uint32_t key, const uint8_t size, const uint8_t* data){
+	mouse_event_handler.register_config_entry(key, size, data);
+}
+
+void HandleHIDOutputMsg(const uint8_t* buf, uint8_t size){
+	PrintHexBuf(const_cast<uint8_t*>(buf), size);
+	hid_rpc_obj.Handle_RPC(buf);
+}
 
 int main(void)
 {
@@ -349,6 +339,8 @@ int main(void)
   uint64_t Data = 0x00000000FFFFFFFF;
   uint8_t i = 0;
 
+  r_tree.map_with_key_value_function(update_key_value_mouse_event_handler);
+
   while (1)
   {
 	  /* USER CODE END WHILE */
@@ -366,7 +358,7 @@ int main(void)
 	  */
 
 	  HAL_Delay(1000);
-	  check_on_config();
+	  //check_on_config();
 	  pI =  USBD_HID_GetPollingInterval(&hUsbDeviceFS);
 	  pI ++;
 	  i ++;

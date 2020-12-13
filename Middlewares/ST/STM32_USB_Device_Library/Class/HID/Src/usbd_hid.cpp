@@ -44,11 +44,11 @@
   EndBSPDependencies */
 
 /* Includes ------------------------------------------------------------------*/
+#include "circular_buffers.hpp"
 #include "usbd_hid.h"
 #include "usbd_ctlreq.h"
 #include "usb_hid_descriptors.h"
 
-#include "../../../../../../circular_buffer/circular_buffers.hpp"
 
 static uint8_t  USBD_HID_Init (USBD_HandleTypeDef *pdev,
                                uint8_t cfgidx);
@@ -105,6 +105,8 @@ USBD_ClassTypeDef  USBD_HID =
 /** @defgroup USBD_HID_Private_Functions
   * @{
   */
+extern uint8_t PrintHexBuf(uint8_t *buff, uint8_t len);
+extern void HandleHIDOutputMsg(const uint8_t* buf, uint8_t len);
 
 /**
   * @brief  USBD_HID_Init
@@ -482,8 +484,11 @@ static uint8_t USBD_HID_EP0_RxReady(USBD_HandleTypeDef *pdev)
 
   if (hhid->IsReportAvailable == 1U)
   {
-    //((USBD_CUSTOM_HID_ItfTypeDef *)pdev->pUserData)->OutEvent(hhid->Report_buf[0],
-    //                                                         hhid->Report_buf[1]);
+	  HandleHIDOutputMsg((const uint8_t*) &hhid->Report_buf[1], 62);
+	  //PrintHexBuf(hhid->Report_buf, 64);
+	  //((USBD_CUSTOM_HID_ItfTypeDef *)pdev->pUserData)->OutEvent(hhid->Report_buf[0],
+	  //                                                         hhid->Report_buf[1]);
+
     hhid->IsReportAvailable = 0U;
   }
 
