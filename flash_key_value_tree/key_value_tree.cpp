@@ -56,16 +56,24 @@ bool always_false(T a){
 }
 
 Flash_Key_Value_Tree::Flash_Key_Value_Tree(uint32_t address):
+tree_address(address),
 root_node_addr((Node_Address) 0),
 growth_node_addr((Node_Address) 0),
 root_node_addr_valid(false),
-growth_node_addr_valid(false)
+growth_node_addr_valid(false),
+_out_of_sync(true),
+status((uint32_t*) address)
 {
-	tree_address = address;
-	status = (uint32_t*) address;
-
-	reload();
+		//reload();
 };
+
+bool Flash_Key_Value_Tree::needs_syncing(){
+	return _out_of_sync;
+}
+
+void Flash_Key_Value_Tree::mark_out_of_sync(){
+	_out_of_sync = true;
+}
 
 void Flash_Key_Value_Tree::reload(){
 	if(has_first_node_written()){
@@ -80,6 +88,7 @@ void Flash_Key_Value_Tree::reload(){
 				growth_node_addr = b;
 			}
 		}
+	_out_of_sync = false;
 }
 
 
@@ -325,6 +334,8 @@ bool Flash_Key_Value_Tree::add_edit_key_value(uint32_t key, uint8_t size, uint8_
 	}
 
 	flash_lock();
+
+	_out_of_sync = true;
 
 	return false;
 }

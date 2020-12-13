@@ -45,7 +45,9 @@ private:
 	Node_Address growth_node_addr;
 	bool root_node_addr_valid;
 	bool growth_node_addr_valid;
+	bool _out_of_sync;
 	uint32_t* status;
+
 
 	bool add_growth_node_with_key_value(const uint32_t key, const uint8_t size, const uint8_t* value);
 	bool add_first_root_node(uint32_t key, uint8_t size, uint8_t* value);
@@ -80,5 +82,7 @@ public:
 	bool add_edit_key_value(uint32_t key, uint8_t size, uint8_t* value);
 	void map_with_key_value_function(std::function<void(const uint32_t key, const uint8_t size, const uint8_t* value)> func);
 	void map_with_key_value_function2(void (*func)(const uint32_t key, const uint8_t size, const uint8_t* value) );
+	bool needs_syncing();
+	void mark_out_of_sync();
 	void reload();
 };

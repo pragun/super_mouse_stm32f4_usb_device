@@ -296,6 +296,8 @@ int main(void)
 
   Node_Address flash_config_tree_root_addr = (uint32_t) 0x08004000;
   Flash_Key_Value_Tree r_tree = Flash_Key_Value_Tree((uint32_t)flash_config_tree_root_addr);
+  r_tree.reload();
+
   auto hid_rpc_obj = RPC_Impl({.flash_key_value_tree=&r_tree});
   hid_rpc_obj_ptr = &hid_rpc_obj;
 
@@ -353,10 +355,24 @@ int main(void)
 	  HAL_FLASH_Lock();
 	  */
 
-	  HAL_Delay(1000);
+	  //HAL_Delay(1000);
 	  //check_on_config();
-	  pI =  USBD_HID_GetPollingInterval(&hUsbDeviceFS);
-	  pI ++;
+	  //pI =  USBD_HID_GetPollingInterval(&hUsbDeviceFS);
+	  //pI ++;
+
+	  //Why is the flash tree synchronized in the main loop?
+	  //1. Why not? The main loop is useless otherwise to this app
+	  //2. It provides a convinience place to "watch-dog" this potentially
+	  //   dangerous function.
+	  //2.a. As its reading the raw flash values and is trying to build a
+	  //     (potentially) complicated data structure. It can runaway
+	  //	 in its own fantasy land
+	  //3. If that happens, the main loop will not be able to kick-the-dog
+	  //   which will lead to a "safe-mode" reboot.
+	  if(r_tree.needs_syncing()){
+		  r_tree.reload();
+	  }
+
 	  i ++;
 	  i = i % 32;
     /* USER CODE BEGIN 3 */
