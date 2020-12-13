@@ -1,21 +1,23 @@
-#pragma once
-#include <array>
-#include <algorithm>
+//#pragma once
+//#include <array>
+//#include <algorithm>
+//
+//#ifdef _MSC_VER
+//#define SequentialEnum(Name,...) \
+//enum Name { __VA_ARGS__ }; \
+//
+//#else
+//#define NUMARGS(...)  (sizeof((int[]){__VA_ARGS__})/sizeof(int))
+//
+//#define SequentialEnum(Name,...) \
+//enum Name { __VA_ARGS__ }; \
+//namespace \
+//{ \
+//    constexpr std::array<Name, NUMARGS(__VA_ARGS__)> Name##List { __VA_ARGS__ }; \
+//};
+//#endif
 
-#ifdef _MSC_VER
-#define SequentialEnum(Name,...) \
-enum Name { __VA_ARGS__ }; \
-
-#else
-#define NUMARGS(...)  (sizeof((int[]){__VA_ARGS__})/sizeof(int))
-
-#define SequentialEnum(Name,...) \
-enum Name { __VA_ARGS__ }; \
-namespace \
-{ \
-    constexpr std::array<Name, NUMARGS(__VA_ARGS__)> Name##List { __VA_ARGS__ }; \
-};
-#endif
+#include "sequential_enum.h"
 
 #define NUM_KEYS_KEYPAD 13 // 12 keys are standard on most MMO mouse. 0 for no key pressed
 #define NUM_EVENT_TYPES_KEYPAD 4 // Key_Press, Short_Press_Release, LongPress_Release and Movement

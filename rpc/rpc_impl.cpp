@@ -1,15 +1,21 @@
+#include "stm32f4xx_hal.h"
 #include "rpc_impl.hpp"
+#include "reporting_functions.h"
 
 //Uses the trailing type delcaration format to leave the most flexibility to the user
 #define DEF_RPC_FUNC(Y) template<>\
 template <>\
 auto RPC<RPC_State_Data, RPC_Function_Enum, num_rpc_impl_funcs>::RPC_Function<RPC_Function_Enum::Y>
 
-
+//extern void HAL_NVIC_SystemReset();
 extern void flash_erase();
 
 DEF_RPC_FUNC(DO_NOTHING)(const uint8_t* buf)->void{
 
+}
+
+DEF_RPC_FUNC(RESET_SYSTEM)(const uint8_t* buf)->void{
+	HAL_NVIC_SystemReset();
 }
 
 DEF_RPC_FUNC(WRITE_KEY_SIZE_VALUE_TO_FLASH)(const uint8_t* buf)->void{
