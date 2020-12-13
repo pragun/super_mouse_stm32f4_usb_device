@@ -77,8 +77,8 @@ Mouse_HID_Report_TypeDef* MouseEventHandler::report_mouse_movement(Mouse_HID_Rep
 	if(report != nullptr){
 		report->mouse_x = accumulated_mouse_del_x;
 		report->mouse_y = accumulated_mouse_del_y;
-		report->scroll_x = accumulated_scroll_y;
-		report->scroll_y = 0;
+		report->scroll_y = accumulated_scroll_y;
+		report->scroll_x = 0;
 
 		accumulated_mouse_del_x = 0;
 		accumulated_mouse_del_y = 0;
