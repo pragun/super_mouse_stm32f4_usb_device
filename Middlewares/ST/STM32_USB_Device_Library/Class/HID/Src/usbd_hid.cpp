@@ -98,6 +98,14 @@ USBD_ClassTypeDef  USBD_HID =
   USBD_HID_GetDeviceQualifierDesc,
 };
 
+
+bool usbd_hid_callback_reg_state = false;
+HandleHID_Rx_TypeDef Handle_HID_RX_Func;
+uint8_t USBD_HID_Register_EP0RX_Callback(HandleHID_Rx_TypeDef a){
+	Handle_HID_RX_Func = a;
+	usbd_hid_callback_reg_state = true;
+}
+
 /**
   * @}
   */
@@ -105,7 +113,7 @@ USBD_ClassTypeDef  USBD_HID =
 /** @defgroup USBD_HID_Private_Functions
   * @{
   */
-extern uint8_t PrintHexBuf(uint8_t *buff, uint8_t len);
+
 extern void HandleHIDOutputMsg(const uint8_t* buf, uint8_t len);
 
 /**
@@ -484,8 +492,11 @@ static uint8_t USBD_HID_EP0_RxReady(USBD_HandleTypeDef *pdev)
 
   if (hhid->IsReportAvailable == 1U)
   {
-	  HandleHIDOutputMsg((const uint8_t*) &hhid->Report_buf[1], 62);
-	  //PrintHexBuf(hhid->Report_buf, 64);
+	  if(usbd_hid_callback_reg_state){
+		  (*Handle_HID_RX_Func)((const uint8_t*) &hhid->Report_buf[1], 62);
+	  }
+
+	  //HandleHIDOutputMsg
 	  //((USBD_CUSTOM_HID_ItfTypeDef *)pdev->pUserData)->OutEvent(hhid->Report_buf[0],
 	  //                                                         hhid->Report_buf[1]);
 

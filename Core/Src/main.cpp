@@ -93,25 +93,6 @@ int spi_half_rx_count = 0;
 const uint16_t keep_alive_period = 50'000;
 uint32_t uart_rx_dma_remaining_bytes = 0;
 
-int16_t accumulated_mouse_del_x = 0;
-int16_t accumulated_mouse_del_y = 0;
-
-int16_t accumulated_scroll_x = 0;
-int16_t accumulated_scroll_y = 0;
-
-uint8_t current_primary_button_state = 0;
-uint8_t previous_primary_button_state = 0;
-
-uint16_t current_keypad_button_state = 0;
-uint16_t previous_keypad_button_state = 0;
-
-int16_t del_x = 0;
-int16_t del_y = 0;
-int8_t del_z = 0;
-
-//Mouse_HID_Report_TypeDef* mouse_hid_report;
-//Absolute_Mouse_HID_Report_TypeDef* absolute_mouse_hid_report;
-
 #pragma pack(1)
 typedef struct
 {
@@ -180,15 +161,9 @@ uint32_t read_keypress_time_ms(){
 	return cnt/10;
 }
 
-
-Node_Address flash_config_tree_root_addr = (uint32_t) 0x08004000;
-
-Flash_Key_Value_Tree r_tree = Flash_Key_Value_Tree((uint32_t)flash_config_tree_root_addr);
-
 MouseEventHandler mouse_event_handler(&stop_keypress_timer, &start_keypress_timer, &read_keypress_time_ms);
 
-auto hid_rpc_obj = RPC_Impl({.flash_key_value_tree=&r_tree});
-
+RPC_Impl* hid_rpc_obj_ptr = NULL;
 
 void spi_rx_complete(SPI_HandleTypeDef *hspi){
 	spi_rx_count ++ ;
@@ -199,7 +174,8 @@ void spi_rx_complete(SPI_HandleTypeDef *hspi){
 	spi_mouse_state_rx = (SPI_MMO_Mouse_State_TypeDef*) spi_rx_buf;
 	mouse_event_handler.update_state(spi_mouse_state_rx->dx, spi_mouse_state_rx->dy, spi_mouse_state_rx->dz, spi_mouse_state_rx->buttons);
 
-	printf("X:%d Y:%d Z:%d B:0x%x \r\n",accumulated_mouse_del_x,accumulated_mouse_del_y,accumulated_scroll_y,current_primary_button_state);
+	//This needs to be updated to use mouse_event_handler for it to work properly
+	//printf("X:%d Y:%d Z:%d B:0x%x \r\n",accumulated_mouse_del_x,accumulated_mouse_del_y,accumulated_scroll_y,current_primary_button_state);
 }
 
 
@@ -280,7 +256,7 @@ void update_key_value_mouse_event_handler(const uint32_t key, const uint8_t size
 
 void HandleHIDOutputMsg(const uint8_t* buf, uint8_t size){
 	PrintHexBuf(const_cast<uint8_t*>(buf), size);
-	hid_rpc_obj.Handle_RPC(buf);
+	hid_rpc_obj_ptr->Handle_RPC(buf);
 }
 
 int main(void)
@@ -317,6 +293,14 @@ int main(void)
   MX_USART2_UART_Init();
   MX_USB_DEVICE_Init();
   MX_CRC_Init();
+
+  Node_Address flash_config_tree_root_addr = (uint32_t) 0x08004000;
+  Flash_Key_Value_Tree r_tree = Flash_Key_Value_Tree((uint32_t)flash_config_tree_root_addr);
+  auto hid_rpc_obj = RPC_Impl({.flash_key_value_tree=&r_tree});
+  hid_rpc_obj_ptr = &hid_rpc_obj;
+
+  USBD_HID_Register_EP0RX_Callback(HandleHIDOutputMsg);
+
   //MX_IWDG_Init();
   //MX_WWDG_Init();
   /* USER CODE BEGIN 2 */

@@ -143,6 +143,9 @@ uint8_t USB_HID_Send_Next_Report(USBD_HandleTypeDef *pdev);
 
 uint32_t USBD_HID_GetPollingInterval (USBD_HandleTypeDef *pdev);
 
+typedef void (*HandleHID_Rx_TypeDef)(const uint8_t* buf, uint8_t size) ;
+uint8_t USBD_HID_Register_EP0RX_Callback(HandleHID_Rx_TypeDef a);
+
 /**
   * @}
   */
