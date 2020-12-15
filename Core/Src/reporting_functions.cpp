@@ -87,17 +87,38 @@ DEF_Reporting_FUNC(MOTION_MOD_KEY_PRESS_RELEASE)(uint8_t* params)->void {
 	accumulated_scroll_y = (accumulated_scroll_y % parameters->z_divisor);
 
 	#define keyboard_press_release_func Reporting_Function<ReportingFunctionEnum::KEYBOARD_PRESS_RELEASE>
-	#define keyboard_press_release_for(V) \
-	if(div_ ## V > 0){\
-		keyboard_press_release_func((uint8_t*) &parameters->V ##_movement_keys[1]);\
-	}\
-	if(div_ ##V < 0){\
-		keyboard_press_release_func((uint8_t*) &parameters->V ##_movement_keys[0]);\
-	}\
 
-	keyboard_press_release_for(x);
-	keyboard_press_release_for(y);
-	keyboard_press_release_for(z);
+	if(div_z > 0){
+		keyboard_press_release_func((uint8_t*) &parameters->z_movement_keys[1]);
+		accumulated_mouse_del_x = 0;
+		accumulated_mouse_del_y = 0;
+	}
+	if(div_z < 0){
+		keyboard_press_release_func((uint8_t*) &parameters->z_movement_keys[0]);
+		accumulated_mouse_del_x = 0;
+		accumulated_mouse_del_y = 0;
+	}
 
+	if(div_x > 0){
+		keyboard_press_release_func((uint8_t*) &parameters->x_movement_keys[1]);
+		accumulated_mouse_del_y = 0;
+		accumulated_scroll_y = 0;
+	}
+	if(div_x < 0){
+		keyboard_press_release_func((uint8_t*) &parameters->x_movement_keys[0]);
+		accumulated_mouse_del_y = 0;
+		accumulated_scroll_y = 0;
+	}
+
+	if(div_y > 0){
+		keyboard_press_release_func((uint8_t*) &parameters->y_movement_keys[1]);
+		accumulated_mouse_del_x = 0;
+		accumulated_scroll_y = 0;
+	}
+	if(div_y < 0){
+		keyboard_press_release_func((uint8_t*) &parameters->y_movement_keys[0]);
+		accumulated_mouse_del_x = 0;
+		accumulated_scroll_y = 0;
+	}
 }
 
