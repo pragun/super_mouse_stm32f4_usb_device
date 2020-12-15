@@ -97,7 +97,7 @@ inline Mouse_HID_Report_TypeDef* MouseEventHandler::report_mouse_button_state(Mo
 void MouseEventHandler::register_config_entry(const uint32_t key, const uint8_t size, const uint8_t* data){
 	uint8_t application_id = key & (0xFF << 8);
 	uint8_t keypad_key =  key & (0xFF);
-	if ((application_id <NUM_APPLICATIONS_KEYPAD) && (keypad_key < NUM_EVENT_TYPES_KEYPAD)){
+	if ((application_id <NUM_APPLICATIONS_KEYPAD) && (keypad_key < NUM_KEYS_KEYPAD)){
 		event_handler_table[application_id][keypad_key] = (Keypad_Event_Table*) data;
 	}
 }
