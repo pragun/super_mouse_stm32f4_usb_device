@@ -370,7 +370,7 @@ int main(void)
 	  //3. If that happens, the main loop will not be able to kick-the-dog
 	  //   which will lead to a "safe-mode" reboot.
 	  if(r_tree.needs_syncing()){
-		  r_tree.reload();
+		 // r_tree.reload();
 	  }
 
 	  i ++;

@@ -80,16 +80,16 @@ bool Node_Header_Data::flag_state<Validity_Flag_Enum::node_written>() const {
 }
 
 inline Link_State_Enum Node_Header_Data::link_status(uint8_t link_id) const {
-	uint8_t status = 0;
-	status = (node_link_status & (0b11 << (link_id*2))) >> (link_id*2);
+	uint16_t status = 0;
+	status = (node_link_status & (0b1111 << (link_id*4))) >> (link_id*4);
 	return static_cast<Link_State_Enum>(status);
 }
 
 /** Node_Header_Typedef **/
 template<>
 inline bool Node_Header_Typedef<Storage::ram>::mark_link_as(uint8_t link_id, Link_State_Enum link_state){
-	uint8_t new_link_status = node_link_status & ~(0b11 << (link_id*2));
-	node_link_status |= (static_cast<uint8_t>(link_state)) << (link_id*2);
+	uint16_t new_link_status = node_link_status & ~(0b1111 << (link_id*4));
+	node_link_status |= (static_cast<uint16_t>(link_state)) << (link_id*4);
 	return true;
 }
 
@@ -107,9 +107,10 @@ uint32_t Node_Header_Typedef<Storage::ram>::location_of_root_link();
 
 template<>
 inline bool Node_Header_Typedef<Storage::flash>::mark_link_as(uint8_t link_id, Link_State_Enum link_state){
-	uint8_t new_link_status = node_link_status & ~(0b11 << (link_id*2));
-	new_link_status |= (static_cast<uint8_t>(link_state)) << (link_id*2);
-	return flash_write_byte((uint32_t) &(node_link_status), new_link_status);
+	uint16_t new_link_status = node_link_status & ~(0b1111 << (link_id*4));
+	new_link_status |= (static_cast<uint16_t>(link_state)) << (link_id*4);
+	return memcpy_to_flash((uint32_t) &(node_link_status), (const uint8_t*) &new_link_status, 2);
+	//return flash_write_byte((uint32_t) &(node_link_status), new_link_status);
 }
 
 
@@ -143,6 +144,10 @@ Key_Value_Ram_Node::Key_Value_Ram_Node(uint32_t key, uint8_t size, const uint8_t
 num_non_growth_links(1) // Set to 1, not zero so that the first item in the array is left for growth_link/implicit link
 {
 	header_obj = {{ 0x0, 0x0, key, size}}; //The status byte and the node_link_status are initially all cleared out
+
+	for(uint8_t i = 0; i<MAX_NUM_CHILD_NODES; i++){
+		header_obj.mark_link_as(i, Link_State_Enum::unallocated);
+	}
 
 	// All new nodes that are created have these following flags validated
 	header_obj.validate_flag<Validity_Flag_Enum::data_valid>();
@@ -235,18 +240,23 @@ valid_children_lazyfltr(link_addresses, valid_children_filter_func)
 	Node_Address* link_addr = reinterpret_cast<Node_Address*>(&byte_address[offset]);
 	for (uint8_t i = 1; i < MAX_NUM_CHILD_NODES; i++){ //The first link is implicit
 		switch(header->link_status(i)){
-		case Link_State_Enum::invalid:
-			link_addresses[i] = (Node_Address)0;
-			break;
-
 		case Link_State_Enum::uninitialized:
-			link_addresses[i] = (Node_Address)0;
+			link_addresses[i] = reinterpret_cast<Node_Address>(link_addr[i-1]);
 			offset += 4;
 			break;
 
 		case Link_State_Enum::valid:
 			link_addresses[i] = reinterpret_cast<Node_Address>(link_addr[i-1]);
 			offset += 4;
+			break;
+
+		case Link_State_Enum::invalid:
+			link_addresses[i] = reinterpret_cast<Node_Address>(link_addr[i-1]);
+			offset += 4;
+			break;
+
+		case Link_State_Enum::unallocated:
+			link_addresses[i] = (Node_Address)0;
 			break;
 		}
 	}

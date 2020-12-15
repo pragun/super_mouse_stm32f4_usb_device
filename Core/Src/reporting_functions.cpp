@@ -76,5 +76,28 @@ DEF_Reporting_FUNC(KEYBOARD_PRESS_RELEASE)(uint8_t* params)->void {
 
 DEF_Reporting_FUNC(MOTION_MOD_KEY_PRESS_RELEASE)(uint8_t* params)->void {
 	PARAMS_STRUCT(MOTION_MOD_KEY_PRESS_RELEASE) *parameters = (PARAMS_STRUCT(MOTION_MOD_KEY_PRESS_RELEASE)*) params;
+
+	int8_t div_x = (accumulated_mouse_del_x / parameters->x_divisor);
+	accumulated_mouse_del_x = (accumulated_mouse_del_x % parameters->x_divisor);
+
+	int8_t div_y = (accumulated_mouse_del_y / parameters->y_divisor);
+	accumulated_mouse_del_y = (accumulated_mouse_del_y % parameters->y_divisor);
+
+	int8_t div_z = (accumulated_scroll_y / parameters->z_divisor);
+	accumulated_scroll_y = (accumulated_scroll_y % parameters->z_divisor);
+
+	#define keyboard_press_release_func Reporting_Function<ReportingFunctionEnum::KEYBOARD_PRESS_RELEASE>
+	#define keyboard_press_release_for(V) \
+	if(div_ ## V > 0){\
+		keyboard_press_release_func((uint8_t*) &parameters->V ##_movement_keys[1]);\
+	}\
+	if(div_ ##V < 0){\
+		keyboard_press_release_func((uint8_t*) &parameters->V ##_movement_keys[0]);\
+	}\
+
+	keyboard_press_release_for(x);
+	keyboard_press_release_for(y);
+	keyboard_press_release_for(z);
+
 }
 

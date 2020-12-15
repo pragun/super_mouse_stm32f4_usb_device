@@ -18,9 +18,10 @@ enum Validity_Flag_Enum : uint8_t{
 };
 
 enum class Link_State_Enum: uint8_t{
-	uninitialized = 0b11,
-	valid = 0b10,
-	invalid = 0b00,
+	uninitialized = 0b1111,
+	valid = 0b1110,
+	invalid = 0b1100,
+	unallocated = 0b1000,
 };
 
 enum class Storage{
@@ -32,15 +33,15 @@ using Node_Address = uint32_t;
 #pragma pack(1)
 struct Node_Header_Data{
 	uint8_t validity_bitmask;
-	uint8_t node_link_status;
+	uint16_t node_link_status;
 
 	/**
 	contains the state of 4 links[bb, bb, bb, bb]
 	for link_indexes [0, 1, 2, 3]
 	For each link bb means --
-	0b11 means un-activated link
-	0b10 means valid link
-	0b00 means invalid link
+	0b11 means valid link
+	0b10 means in-valid link
+	0b00 means non-allocated
 	**/
 
 	uint32_t key;
