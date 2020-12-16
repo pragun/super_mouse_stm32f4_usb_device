@@ -46,7 +46,8 @@ void MouseEventHandler::update_state(int16_t dx, int16_t dy, int8_t dz, uint32_t
 	accumulated_mouse_del_y += dy;
 	accumulated_scroll_y += dz;
 
-	current_primary_button_state = button_state & 0x0F;
+	current_primary_button_state = button_state & 0x0F; //this captures the first three buttons
+	current_primary_button_state |= (button_state & 0x20) >> 2;
 	current_keypad_state = (button_state >> 8) & 0x0FFF;
 }
 
@@ -103,7 +104,21 @@ void MouseEventHandler::register_config_entry(const uint32_t key, const uint8_t 
 }
 
 void MouseEventHandler::dispatch_application_event_type(uint8_t event_type){
-	Keypad_Event_Table* event_table = event_handler_table[current_application_id][tracking_pressed_key];
+	uint8_t key_index = tracking_pressed_key;
+
+	if (current_primary_button_state & (0x01 << (RING_BUTTON - 1))){
+		key_index = RING_BUTTON_KEYPAD_IDX;
+	}
+
+	else if (current_primary_button_state & (0x01 << (SCROLL_BUTTON - 1))){
+		key_index = SCROLL_BUTTON_KEYPAD_IDX;
+	}
+
+	else{
+		key_index = tracking_pressed_key;
+	}
+
+	Keypad_Event_Table* event_table = event_handler_table[current_application_id][key_index];
 	uint8_t event_table_entry_offset = event_table->entry_offsets[event_type];
 
 	Keypad_Event_Table_Entry_Typedef* event_table_entry = reinterpret_cast<Keypad_Event_Table_Entry_Typedef*>(&(event_table->payload[event_table_entry_offset]));
@@ -120,6 +135,11 @@ void MouseEventHandler::hid_poll_interval_timer_callback(){
 	}
 
 	if (current_keypad_state != previous_keypad_state){ //There's been a change on the keypad
+		if(current_keypad_state == 0){
+			if (modifier_keys_state != 0){
+				release_all_keys();
+			}
+		}
 		if ((current_keypad_state == 0) && (num_keypad_movements_events_generated == 0)){
 			// The pressed key has been lifted, and no movement significant
 			// enough to report while the key was down was observed
@@ -162,12 +182,12 @@ void MouseEventHandler::hid_poll_interval_timer_callback(){
 	}
 
 	if ((accumulated_mouse_del_x != 0)||(accumulated_mouse_del_y != 0)||(accumulated_scroll_y !=0)){ //Some movement is been accumulated on the mouse
-		if (tracking_pressed_key == 0){ //No keypad key is pressed, this means that the movement can be reported as a regular mouse HID report
+		/* if (tracking_pressed_key == 0){ //No keypad key is pressed, this means that the movement can be reported as a regular mouse HID report
 			report_mouse_movement(mouse_hid_report);
 		}
-		else{
+		else{ */
 			dispatch_application_event_type(ReportingEventTypes::MOUSE_MOVEMENT);
-		}
+		//}
 	}
 
 	mouse_hid_report = nullptr;

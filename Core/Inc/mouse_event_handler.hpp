@@ -2,6 +2,9 @@
 #include "mouse_hid_reports.h"
 #include "reporting_functions.h"
 
+#define SCROLL_BUTTON 3
+#define RING_BUTTON 4
+
 class MouseEventHandler {
 public:
 	void (*start_timer)();
@@ -43,10 +46,13 @@ private:
 	uint16_t previous_keypad_state = 0;
 
 	Mouse_HID_Report_TypeDef* mouse_hid_report;
+	uint8_t modifier_keys_state = 0;
 
 	Mouse_HID_Report_TypeDef* create_or_retreive_default_mouse_hid_report();
 	Mouse_HID_Report_TypeDef* report_mouse_movement(Mouse_HID_Report_TypeDef*);
 	Mouse_HID_Report_TypeDef* report_mouse_button_state(Mouse_HID_Report_TypeDef*);
+
+	void release_all_keys();
 
 	void dispatch_application_event_type(uint8_t event_type);
 
