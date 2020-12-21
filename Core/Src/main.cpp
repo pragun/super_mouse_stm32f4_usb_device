@@ -298,7 +298,7 @@ int main(void)
   Flash_Key_Value_Tree r_tree = Flash_Key_Value_Tree((uint32_t)flash_config_tree_root_addr);
   r_tree.reload();
 
-  auto hid_rpc_obj = RPC_Impl({.flash_key_value_tree=&r_tree});
+  auto hid_rpc_obj = RPC_Impl({.flash_key_value_tree=&r_tree, .mouse_event_handler=&mouse_event_handler});
   hid_rpc_obj_ptr = &hid_rpc_obj;
 
   USBD_HID_Register_EP0RX_Callback(HandleHIDOutputMsg);

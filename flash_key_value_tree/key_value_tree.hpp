@@ -1,3 +1,6 @@
+#ifndef __KEY_VALUE_TREE__
+#define __KEY_VALUE_TREE__
+
 #include <key_value_node.hpp>
 #include <cstdio>
 #include <stack>
@@ -86,3 +89,5 @@ public:
 	void mark_out_of_sync();
 	void reload();
 };
+
+#endif

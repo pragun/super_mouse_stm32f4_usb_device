@@ -1,3 +1,5 @@
+#ifndef __MOUSE_EVENT_HANDLER__
+#define __MOUSE_EVENT_HANDLER__
 
 #include "mouse_hid_reports.h"
 #include "reporting_functions.h"
@@ -20,6 +22,8 @@ public:
 	void hid_poll_interval_timer_callback();
 
 	void register_config_entry(const uint32_t key, const uint8_t size, const uint8_t* data);
+
+	void set_application_id(uint8_t app_id);
 
 private:
 	// State Flags
@@ -74,3 +78,5 @@ private:
 	template<uint8_t idx>
 	static constexpr Rprting_Fptr get_fptr_from_idx();
 };
+
+#endif

@@ -1,6 +1,5 @@
 #include "stm32f4xx_hal.h"
 #include "rpc_impl.hpp"
-#include "reporting_functions.h"
 
 //Uses the trailing type delcaration format to leave the most flexibility to the user
 #define DEF_RPC_FUNC(Y) template<>\
@@ -35,6 +34,13 @@ DEF_RPC_FUNC(WRITE_KEY_SIZE_VALUE_TO_FLASH)(const uint8_t* buf)->void{
 DEF_RPC_FUNC(ERASE_FLASH_SECTOR)(const uint8_t* buf)->void{
 	flash_erase();
 }
+
+
+DEF_RPC_FUNC(SET_CURRENT_APPLICATION_ID)(const uint8_t* buf)->void{
+	uint8_t app_id = buf[0];
+	state_data.mouse_event_handler->set_application_id(app_id);
+}
+
 
 	/* Some other previously tried configuration DSL prototypes
 	 * */

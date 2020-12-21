@@ -100,6 +100,11 @@ void MouseEventHandler::register_config_entry(const uint32_t key, const uint8_t 
 	uint8_t keypad_key =  key & (0xFF);
 	if ((application_id <NUM_APPLICATIONS_KEYPAD) && (keypad_key < NUM_KEYS_KEYPAD)){
 		event_handler_table[application_id][keypad_key] = (Keypad_Event_Table*) data;
+		if(application_id == 0){
+			for(uint8_t i = 0; i<NUM_APPLICATIONS_KEYPAD; i++){
+				event_handler_table[i][keypad_key] = (Keypad_Event_Table*) data;
+			}
+		}
 	}
 }
 
@@ -203,6 +208,10 @@ void MouseEventHandler::hid_poll_interval_timer_callback(){
 	USB_HID_Send_Next_Report(&hUsbDeviceFS);
 }
 
+void MouseEventHandler::set_application_id(uint8_t app_id){
+	current_application_id = app_id;
+}
+
 MouseEventHandler::MouseEventHandler(void (*stop_timer)(), void (*start_timer)(), uint32_t (*time_elapsed_ms)()):
 				start_timer{start_timer},
 				stop_timer{stop_timer},
@@ -217,3 +226,4 @@ MouseEventHandler::MouseEventHandler(void (*stop_timer)(), void (*start_timer)()
 					}
 
 };
+
