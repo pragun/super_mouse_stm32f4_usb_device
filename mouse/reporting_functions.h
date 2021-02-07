@@ -14,6 +14,7 @@
 #define NUM_APPLICATIONS_KEYPAD 16 // Can store between 16 application specific reporting options
 
 
+
 namespace ReportingEventTypes{
 	enum ReportingEventTypes:uint8_t{
 		KEY_DOWN = 0,
@@ -42,50 +43,107 @@ struct Reporting_Func_Params_Typedef{
 #define REPORT_FUNC_PARAMS(X,Y) template<>\
 							struct Reporting_Func_Params_Typedef<ReportingFunctionEnum::X>Y
 
+#define SIMPLE_STRUCT_MEMBER(z,x,y) x y;
+#define _SIMPLE_STRUCT_MEMBER SIMPLE_STRUCT_MEMBER
+#define ARRAY_STRUCT_MEMBER(z,x,y,n) x y[n];
+#define _ARRAY_STRUCT_MEMBER ARRAY_STRUCT_MEMBER
 
-REPORT_FUNC_PARAMS(MOTION_AS_SCROLL,{
-		int16_t x_divisor;
-		int16_t y_divisor;
-	});
+#define _SIMPLE_LUA_BINDING(z,x,y) #y, &test<T::z>::y
+#define SIMPLE_LUA_BINDING(z,x,y) _SIMPLE_LUA_BINDING(z,x,y),
 
+#define _ARRAY_LUA_BINDING(z,x,y,n) #y, sol::property(\
+								 [](Reporting_Func_Params_Typedef<ReportingFunctionEnum::z>& s) {\
+								 return std::ref(s.y); })
+#define ARRAY_LUA_BINDING(z,x,y,n) _ARRAY_LUA_BINDING(z,x,y,n),
+
+#define REPORT_PARAMS_STRUCT(X) template<>	\
+	struct Reporting_Func_Params_Typedef<ReportingFunctionEnum::X>{X(X,SIMPLE_STRUCT_MEMBER,ARRAY_STRUCT_MEMBER)}
+
+#define LUA_BINDING(X) LUA_BINDING_HELPER(X,#X, X(X,SIMPLE_LUA_BINDING,ARRAY_LUA_BINDING)) 
+#define LUA_BINDING_HELPER(X,...) lua.new_usertype<Reporting_Func_Params_Typedef<ReportingFunctionEnum::X>>( __VA_ARGS__ )
+
+#define MOTION_AS_SCROLL(N,SIMPLE,ARR) \
+	SIMPLE(N, int16_t, x_divisor) \
+	_##SIMPLE(N, int16_t, y_divisor) \
+
+REPORT_PARAMS_STRUCT(MOTION_AS_SCROLL);
+
+//REPORT_FUNC_PARAMS(MOTION_AS_SCROLL,{
+//		int16_t x_divisor;
+//		int16_t y_divisor;
+//	});
 
 REPORT_FUNC_PARAMS(NO_REPORT,{});
 
+#define ALTERED_MOUSE_MOVEMENT(N,SIMPLE,ARR) \
+		SIMPLE(N, int16_t, x_factor) \
+		SIMPLE(N, int16_t, y_factor) \
+		_##SIMPLE(N, int16_t, z_factor)
 
-REPORT_FUNC_PARAMS(ALTERED_MOUSE_MOVEMENT,{
-	int16_t x_factor;
-	int16_t y_factor;
-	int16_t z_factor;
-});
+REPORT_PARAMS_STRUCT(ALTERED_MOUSE_MOVEMENT);
 
-REPORT_FUNC_PARAMS(ABSOLUTE_MOUSE_POSITIION,{
-	uint16_t x;
-	uint16_t y;
-	uint8_t button;
-});
+//REPORT_FUNC_PARAMS(ALTERED_MOUSE_MOVEMENT,{
+//	int16_t x_factor;
+//	int16_t y_factor;
+//	int16_t z_factor;
+//});
 
 
-REPORT_FUNC_PARAMS(KEYBOARD_PRESS_RELEASE,{
-	uint8_t modifier_keys;
-	uint8_t keys[3];
-});
+#define ABSOLUTE_MOUSE_POSITIION(N,SIMPLE,ARR) \
+	SIMPLE(N, uint16_t, x) \
+	SIMPLE(N, uint16_t, y) \
+	_##SIMPLE(N, uint8_t, button)
+
+REPORT_PARAMS_STRUCT(ABSOLUTE_MOUSE_POSITIION);
+
+//REPORT_FUNC_PARAMS(ABSOLUTE_MOUSE_POSITIION,{
+//	uint16_t x;
+//	uint16_t y;
+//	uint8_t button;
+//});
+
+#define KEYBOARD_PRESS_RELEASE(N,SIMPLE,ARR) \
+	SIMPLE(N, uint8_t, modifier_keys) \
+	_##ARR(N, uint8_t, keys, 3)
+
+REPORT_PARAMS_STRUCT(KEYBOARD_PRESS_RELEASE);
+
+//REPORT_FUNC_PARAMS(KEYBOARD_PRESS_RELEASE,{
+//	uint8_t modifier_keys;
+//	uint8_t keys[3];
+//});
 
 using keyboard_press_release_params = Reporting_Func_Params_Typedef<ReportingFunctionEnum::KEYBOARD_PRESS_RELEASE>;
 
-REPORT_FUNC_PARAMS(MODIFIER_HOLD_PRESS_RELEASE,{
-	uint8_t modifier_hold_state;
-	keyboard_press_release_params press_release;
-});
+#define MODIFIER_HOLD_PRESS_RELEASE(N, SIMPLE, ARR)\
+	SIMPLE(N, uint8_t, modifier_hold_state) \
+	_##SIMPLE(N, keyboard_press_release_params, press_release)
 
+REPORT_PARAMS_STRUCT(MODIFIER_HOLD_PRESS_RELEASE);
 
-REPORT_FUNC_PARAMS(MOTION_MOD_KEY_PRESS_RELEASE,{
-	uint8_t x_divisor;
-	uint8_t y_divisor;
-	uint8_t z_divisor;
-	keyboard_press_release_params x_movement_keys[2];
-	keyboard_press_release_params y_movement_keys[2];
-	keyboard_press_release_params z_movement_keys[2];
-});
+//REPORT_FUNC_PARAMS(MODIFIER_HOLD_PRESS_RELEASE,{
+//	uint8_t modifier_hold_state;
+//	keyboard_press_release_params press_release;
+//});
+
+#define MOTION_MOD_KEY_PRESS_RELEASE(N,SIMPLE,ARR)\
+		SIMPLE(N, uint8_t, x_divisor) \
+		SIMPLE(N, uint8_t, y_divisor) \
+		SIMPLE(N, uint8_t, z_divisor) \
+		ARR(N, keyboard_press_release_params, x_movement_keys, 2) \
+		ARR(N, keyboard_press_release_params, y_movement_keys, 2) \
+		_##ARR(N, keyboard_press_release_params, z_movement_keys, 2)
+
+REPORT_PARAMS_STRUCT(MOTION_MOD_KEY_PRESS_RELEASE);
+
+//REPORT_FUNC_PARAMS(MOTION_MOD_KEY_PRESS_RELEASE,{
+//	uint8_t x_divisor;
+//	uint8_t y_divisor;
+//	uint8_t z_divisor;
+//	keyboard_press_release_params x_movement_keys[2];
+//	keyboard_press_release_params y_movement_keys[2];
+//	keyboard_press_release_params z_movement_keys[2];
+//});
 
 struct empty_struct{};
 
