@@ -48,19 +48,19 @@ struct Reporting_Func_Params_Typedef{
 #define ARRAY_STRUCT_MEMBER(z,x,y,n) x y[n];
 #define _ARRAY_STRUCT_MEMBER ARRAY_STRUCT_MEMBER
 
-#define _SIMPLE_LUA_BINDING(z,x,y) #y, &test<T::z>::y
-#define SIMPLE_LUA_BINDING(z,x,y) _SIMPLE_LUA_BINDING(z,x,y),
+#define STRUCT_DEF(N,X) struct N{X(X,SIMPLE_STRUCT_MEMBER,ARRAY_STRUCT_MEMBER)}
 
-#define _ARRAY_LUA_BINDING(z,x,y,n) #y, sol::property(\
-								 [](Reporting_Func_Params_Typedef<ReportingFunctionEnum::z>& s) {\
-								 return std::ref(s.y); })
-#define ARRAY_LUA_BINDING(z,x,y,n) _ARRAY_LUA_BINDING(z,x,y,n),
+#define REPORT_PARAMS_STRUCT(X) template<> STRUCT_DEF(Reporting_Func_Params_Typedef<ReportingFunctionEnum::X>, X)
 
-#define REPORT_PARAMS_STRUCT(X) template<>	\
-	struct Reporting_Func_Params_Typedef<ReportingFunctionEnum::X>{X(X,SIMPLE_STRUCT_MEMBER,ARRAY_STRUCT_MEMBER)}
+//#define REPORT_PARAMS_STRUCT(X) template<>	\
+//	struct Reporting_Func_Params_Typedef<ReportingFunctionEnum::X>{X(X,SIMPLE_STRUCT_MEMBER,ARRAY_STRUCT_MEMBER)}
 
-#define LUA_BINDING(X) LUA_BINDING_HELPER(X,#X, X(X,SIMPLE_LUA_BINDING,ARRAY_LUA_BINDING)) 
-#define LUA_BINDING_HELPER(X,...) lua.new_usertype<Reporting_Func_Params_Typedef<ReportingFunctionEnum::X>>( __VA_ARGS__ )
+//Here N is just the name of C1 [or in this case it is the enum type of T::C1]
+//Passing it in like this makes it easier to write SIMPLE(N,....) instead of SIMPLE(Keyboard_Key_Up_Down,....)
+//The additional _## makes SIMPLE into _SIMPLE, which (as can be seen above in the macro expansion)
+//is expanded without a trailing comma for Lua Bindings
+//The _## on the last item makes no difference to how the struct is expanded
+
 
 #define MOTION_AS_SCROLL(N,SIMPLE,ARR) \
 	SIMPLE(N, int16_t, x_divisor) \
