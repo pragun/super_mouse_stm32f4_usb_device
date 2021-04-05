@@ -1,7 +1,7 @@
 # Configuration Flash  Key Value Store [UCFKVS]
 
 ## Background
-The UCFKVS allows one to permanently store, retrieve and edit key-value pairs on the STM324xx Flash memory. The keys have to be fixed size [4bytes, uint_32t in the current implementation]. The values can be variable sized.
+The UCFKVS allows one to store, retrieve and update key-value pairs on the STM324xx Flash memory. The keys have to be fixed size [4bytes, uint_32t in the current implementation]. The values can be variable sized.
 
 The STM32F4xx does not have any EEPROM, which is ideal for saving user configuration data as it can be read and written practically infinite times. Flash Memory however is more tricky to write to. First it can endure a limited number of write cycles [10,000-100,000], second is in the way the STM32F4xx flash is organized.
 
@@ -78,4 +78,4 @@ UCFKVS UCFKVS_storage_object = UCFKVS::initialize_on_sector();
 ```
 
 ## Limitations
-To be written
+TBW
