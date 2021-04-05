@@ -51,7 +51,7 @@ The points 1 & 2 set the stage for introducing the UCFKVS:
 ##TL;DR
 ## Who/When would someone use this?
 - If you are working on an STM32F4 (or related embedded MCU project, do your own research )
-- Sf you need a way to persistently (saved across power-cycles, power-off and resets) store user configuration data.
+- If you need a way to persistently (saved across power-cycles, power-off and resets) store user configuration data.
 - Such data that the user might want to change/edit, intermittently (say several times a day at-most). For example keymap configuration for a USB Keyboard, mouse parameters such as dpi, refresh rate, macro functions, temperature values for PID temperature controller -- to name a few.
 - There might be several to several tens-of-thousands configuration values that the user might want to change individually
 - The user might (obviously) prefer to not have to wait unreasonably long to edit a single user configuration value
